@@ -1,23 +1,17 @@
-UPDATE v9 – NEUES DC-HUNTERS-DESIGN
+UPDATE v10
+Alle Dateien auf GitHub ersetzen. Danach etwa 1 Minute warten und prüfen, ob oben v10 steht.
 
 Neu:
-- Dunkles Schwarz-/Anthrazit-Design
-- Goldene Hauptfarben passend zum Logo
-- Grün = anwesend / aktiv
-- Rot = Pause oder Löschen
-- Ergebnisfelder deutlicher hervorgehoben
-- Spielkarten und Tabellen übersichtlicher
-- Größere Bedienelemente für das iPad
-- PDF-Druck bleibt hell und gut lesbar
-- Alle bisherigen Funktionen bleiben erhalten
+- helles DC-Hunters-Design
+- Datum des Trainingstags
+- Tagesrangliste
+- Spiele, Siege, Niederlagen, Legs, Siegquote, Pausen
+- Trainingstage speichern und wieder laden
+- Monats-, Jahres- und Gesamtrangliste
+- PDF-Ausgabe
+- zwei Automaten
+- Spielerwechsel
+- Gäste
+- Kostenregel 2:0 = 1,00 € pro Spieler; 2:1 = 1,50 € pro Spieler
 
-Auf GitHub diese Dateien hochladen und ersetzen:
-index.html
-manifest.webmanifest
-sw.js
-icon-192.png
-icon-512.png
-apple-touch-icon.png
-favicon-32.png
-
-Danach etwa eine Minute warten. Oben muss „v9“ stehen.
+Hinweis: Gespeicherte Daten liegen lokal auf dem jeweiligen Gerät.
