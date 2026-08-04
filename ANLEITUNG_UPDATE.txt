@@ -1,12 +1,17 @@
-UPDATE AUF GITHUB:
-1. Im Repository auf „Datei hinzufügen“ → „Dateien hochladen“.
-2. Diese fünf Dateien hochladen:
-   index.html
-   sw.js
-   manifest.webmanifest
-   icon-192.png
-   icon-512.png
-3. Vorhandene Dateien ersetzen und Änderungen bestätigen.
-4. Etwa 1 Minute warten.
-5. Auf dem iPad die App schließen und neu öffnen.
-6. Falls noch die alte Version erscheint: Safari-Link öffnen und neu laden.
+DC-HUNTERS-SYMBOL AUF GITHUB AKTUALISIEREN
+
+Diese Dateien hochladen und vorhandene Dateien ersetzen:
+- index.html
+- manifest.webmanifest
+- sw.js
+- icon-192.png
+- icon-512.png
+- apple-touch-icon.png
+- favicon-32.png
+
+Danach:
+1. Etwa 1 Minute warten.
+2. Auf dem iPad das alte Home-Bildschirm-Symbol löschen.
+3. Den GitHub-Pages-Link erneut in Safari öffnen.
+4. Teilen → Zum Home-Bildschirm.
+5. Jetzt erscheint das DC-Hunters-Symbol mit dem Namen „DC Hunters“.

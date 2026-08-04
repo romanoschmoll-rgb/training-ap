@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17324d">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>Training</title>
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<title>DC Hunters</title>
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--dark:#17324d;--blue:#2f75b5;--line:#c8d5e2;--green:#dff3e4;--yellow:#fff4c7;--red:#fde2e2;--text:#1d2a36}
 *{box-sizing:border-box}
@@ -21,7 +22,7 @@ h2{margin:0 0 12px;font-size:21px}
 .player input[type=checkbox]{width:26px;height:26px}
 .player-actions{display:flex;gap:8px;align-items:center}
 .remove{background:#b64242;color:#fff;border:0;border-radius:8px;padding:7px 10px;font-size:14px}
-.tabs,.actions,.guest-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tabs,.guest-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 button{border:0;border-radius:12px;padding:14px;font-size:17px;font-weight:800;cursor:pointer}
 .tab{background:#e9eef4}.tab.active{background:var(--dark);color:#fff}
 .primary{background:var(--blue);color:#fff}.secondary{background:#e9eef4}.danger{background:#b64242;color:#fff}
@@ -38,15 +39,37 @@ select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;f
 table{width:100%;border-collapse:collapse;font-size:17px}
 th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;text-align:left}.money{text-align:right}
 .small{font-size:14px;color:#566575}
-.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.summary-box{border:1px solid var(--line);border-radius:13px;padding:12px;background:#f9fbfd}.summary-box strong{display:block;font-size:26px;margin-top:4px}.banner{background:#fff4c7;border:1px solid #e6d679;border-radius:12px;padding:10px;margin-bottom:12px;font-weight:700}
-@media(max-width:700px){.players,.tabs,.actions,.guest-row,.result,.summary-grid{grid-template-columns:1fr}.match{grid-template-columns:1fr}.vs{display:none}.team{text-align:left}}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.summary-box{border:1px solid var(--line);border-radius:13px;padding:12px;background:#f9fbfd}.summary-box strong{display:block;font-size:26px;margin-top:4px}.banner{background:#fff4c7;border:1px solid #e6d679;border-radius:12px;padding:10px;margin-bottom:12px;font-weight:700}
+@media(max-width:700px){.players,.tabs,.guest-row,.result,.summary-grid{grid-template-columns:1fr}.match{grid-template-columns:1fr}.vs{display:none}.team{text-align:left}}
+
+@media print{
+  @page{size:A4 portrait;margin:12mm}
+  body{background:#fff;color:#000;font-size:11pt}
+  header{position:static;background:#fff;color:#000;box-shadow:none;border-bottom:2px solid #000;padding:0 0 10px;margin-bottom:12px}
+  main{max-width:none;padding:0}
+  .card{box-shadow:none;border:1px solid #999;border-radius:0;break-inside:avoid;margin:0 0 10px;padding:10px}
+  .card:nth-of-type(1),.card:nth-of-type(2),.card:last-of-type{display:none}
+  button,input,.remove,.small{display:none!important}
+  .round{break-inside:avoid;border:1px solid #777}
+  .round-head{background:#eee!important;color:#000!important}
+  .game{break-inside:avoid}
+  .result select{display:none!important}
+  .result{display:block}
+  .note{background:#fff!important;border:1px solid #aaa}
+  .pause{background:#fff!important;border-top:1px solid #aaa}
+  table{font-size:9pt}
+  th,td{padding:5px}
+  .summary-grid{grid-template-columns:1fr 1fr!important}
+  .pdf-only{display:block!important}
+}
+.pdf-only{display:none}
+
 </style>
 </head>
 <body>
-<header>Training – Einzel & Doppel</header>
+<header>DC Hunters – Training</header>
 <main>
-<div class="banner">Nach dem ersten Öffnen in Safari: Teilen → Zum Home-Bildschirm. Danach läuft die App offline.</div>
-
+<div class="pdf-only" id="pdfDate"></div>
 <section class="card">
 <h2>1. Spieler und Gäste</h2>
 <div class="guest-row">
@@ -95,6 +118,7 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 <section class="card">
 <div class="actions">
 <button class="secondary" onclick="saveNow()">Speichern</button>
+<button class="primary" onclick="exportPDF()">Spielstände als PDF speichern</button>
 <button class="danger" onclick="resetDay()">Neuen Trainingstag starten</button>
 </div>
 </section>
@@ -103,7 +127,7 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
 let mode="einzel";
-let state=JSON.parse(localStorage.getItem("training-final-v2")||"null")||{
+let state=JSON.parse(localStorage.getItem("dc-hunters-v1")||"null")||{
  players:[...basePlayers],guests:[],
  present:Object.fromEntries(basePlayers.map(n=>[n,true])),
  rounds:[],history:{opponents:{},pauses:{}}
@@ -111,7 +135,7 @@ let state=JSON.parse(localStorage.getItem("training-final-v2")||"null")||{
 
 function allPlayers(){return [...state.players,...state.guests]}
 function euro(v){return v.toLocaleString("de-DE",{style:"currency",currency:"EUR"})}
-function persist(){localStorage.setItem("training-final-v2",JSON.stringify(state))}
+function persist(){localStorage.setItem("dc-hunters-v1",JSON.stringify(state))}
 function saveNow(){persist();alert("Gespeichert.")}
 function setMode(m){mode=m;einzelBtn.classList.toggle("active",m==="einzel");doppelBtn.classList.toggle("active",m==="doppel")}
 function pairKey(a,b){return [a,b].sort().join("|")}
@@ -241,6 +265,15 @@ function resetDay(){
  }
 }
 if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js")}
+
+function exportPDF(){
+  const now=new Date();
+  const dateText=now.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const dateNode=document.getElementById("pdfDate");
+  if(dateNode)dateNode.textContent="Training vom "+dateText;
+  window.print();
+}
+
 renderPlayers();renderRounds();renderBilling();
 </script>
 </body>
