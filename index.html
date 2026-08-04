@@ -67,7 +67,7 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="" style="width:42px;height:42px;border-radius:10px;vertical-align:middle;margin-right:10px">DC Hunters – Training <span style="font-size:13px;opacity:.75">v5</span></header>
+<header><img src="apple-touch-icon.png" alt="" style="width:42px;height:42px;border-radius:10px;vertical-align:middle;margin-right:10px">DC Hunters – Training <span style="font-size:13px;opacity:.75">v6</span></header>
 <main>
 <div class="pdf-only" id="pdfDate"></div>
 <section class="card">
@@ -127,7 +127,7 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
 let mode="einzel";
-let state=JSON.parse(localStorage.getItem("dc-hunters-v5")||"null")||{
+let state=JSON.parse(localStorage.getItem("dc-hunters-v6")||"null")||{
  players:[...basePlayers],guests:[],
  present:Object.fromEntries(basePlayers.map(n=>[n,true])),
  rounds:[],history:{opponents:{},pauses:{}}
@@ -135,7 +135,7 @@ let state=JSON.parse(localStorage.getItem("dc-hunters-v5")||"null")||{
 
 function allPlayers(){return [...state.players,...state.guests]}
 function euro(v){return v.toLocaleString("de-DE",{style:"currency",currency:"EUR"})}
-function persist(){localStorage.setItem("dc-hunters-v5",JSON.stringify(state))}
+function persist(){localStorage.setItem("dc-hunters-v6",JSON.stringify(state))}
 function saveNow(){persist();alert("Gespeichert.")}
 function setMode(m){mode=m;einzelBtn.classList.toggle("active",m==="einzel");doppelBtn.classList.toggle("active",m==="doppel")}
 function pairKey(a,b){return [a,b].sort().join("|")}
@@ -223,11 +223,8 @@ function rebuildHistory(){
 function setResult(id,index,value){const r=state.rounds.find(x=>x.id===id);if(r){r.games[index].result=value;persist();renderRounds();renderBilling()}}
 function rule(r,g){
  if(!g.result)return "Noch kein Ergebnis";
- if(r.mode==="einzel"){if(g.result==="2:1")return g.players[0]+" zahlt zusätzlich 0,50 €";if(g.result==="1:2")return g.players[1]+" zahlt zusätzlich 0,50 €";return "Beide zahlen je 0,50 €"}
- const t1=g.players[0]+" + "+g.players[1],t2=g.players[2]+" + "+g.players[3];
- if(g.result==="2:1")return t1+": beide zusätzlich je 0,50 €";
- if(g.result==="1:2")return t2+": beide zusätzlich je 0,50 €";
- return "Alle vier zahlen je 0,50 €"
+ if(g.result==="2:0"||g.result==="0:2")return "Jeder beteiligte Spieler zahlt 1,00 €";
+ return "Jeder beteiligte Spieler zahlt 1,50 €";
 }
 function renderRounds(){
  const el=document.getElementById("rounds");el.innerHTML="";
@@ -248,20 +245,26 @@ function calc(){
  const bill=Object.fromEntries(allPlayers().map(n=>[n,{einzel:0,doppel:0,spiele:0,siege:0,pausen:state.history.pauses[n]||0}]));
  state.rounds.forEach(r=>r.games.forEach(g=>{
   if(!g.result)return;
-  g.players.forEach(p=>{bill[p][r.mode]+=0.5;bill[p].spiele+=1});
+  const betrag=(g.result==="2:0"||g.result==="0:2")?1.0:1.5;
+  g.players.forEach(p=>{
+   bill[p][r.mode]+=betrag;
+   bill[p].spiele+=1;
+  });
   if(r.mode==="einzel"){
    if(g.result==="2:0"||g.result==="2:1")bill[g.players[0]].siege+=1;
    if(g.result==="0:2"||g.result==="1:2")bill[g.players[1]].siege+=1;
-   if(g.result==="2:1")bill[g.players[0]].einzel+=0.5;
-   if(g.result==="1:2")bill[g.players[1]].einzel+=0.5;
   }else{
-   if(g.result==="2:0"||g.result==="2:1"){bill[g.players[0]].siege+=1;bill[g.players[1]].siege+=1}
-   if(g.result==="0:2"||g.result==="1:2"){bill[g.players[2]].siege+=1;bill[g.players[3]].siege+=1}
-   if(g.result==="2:1"){bill[g.players[0]].doppel+=0.5;bill[g.players[1]].doppel+=0.5}
-   if(g.result==="1:2"){bill[g.players[2]].doppel+=0.5;bill[g.players[3]].doppel+=0.5}
+   if(g.result==="2:0"||g.result==="2:1"){
+    bill[g.players[0]].siege+=1;
+    bill[g.players[1]].siege+=1;
+   }
+   if(g.result==="0:2"||g.result==="1:2"){
+    bill[g.players[2]].siege+=1;
+    bill[g.players[3]].siege+=1;
+   }
   }
  }));
- return bill
+ return bill;
 }
 function renderBilling(){
  const b=calc(),tbody=document.getElementById("billing");tbody.innerHTML="";let total=0;

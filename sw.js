@@ -1,11 +1,11 @@
-const CACHE="dc-hunters-v5";
+const CACHE="dc-hunters-v6";
 const FILES=[
-  "./index.html?v=5",
+  "./index.html?v=6",
   "./manifest.webmanifest",
-  "./icon-192.png?v=5",
-  "./icon-512.png?v=5",
-  "./apple-touch-icon.png?v=5",
-  "./favicon-32.png?v=5"
+  "./icon-192.png?v=6",
+  "./icon-512.png?v=6",
+  "./apple-touch-icon.png?v=6",
+  "./favicon-32.png?v=6"
 ];
 self.addEventListener("install",e=>{
   self.skipWaiting();
