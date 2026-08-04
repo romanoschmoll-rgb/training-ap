@@ -39,7 +39,7 @@ select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;f
 table{width:100%;border-collapse:collapse;font-size:17px}
 th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;text-align:left}.money{text-align:right}
 .small{font-size:14px;color:#566575}
-.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.summary-box{border:1px solid var(--line);border-radius:13px;padding:12px;background:#f9fbfd}.summary-box strong{display:block;font-size:26px;margin-top:4px}.banner{background:#fff4c7;border:1px solid #e6d679;border-radius:12px;padding:10px;margin-bottom:12px;font-weight:700}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.summary-box{border:1px solid var(--line);border-radius:13px;padding:12px;background:#f9fbfd}.summary-box strong{display:block;font-size:26px;margin-top:4px}
 @media(max-width:700px){.players,.tabs,.guest-row,.result,.summary-grid{grid-template-columns:1fr}.match{grid-template-columns:1fr}.vs{display:none}.team{text-align:left}}
 
 @media print{
@@ -67,7 +67,7 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 </style>
 </head>
 <body>
-<header>DC Hunters – Training</header>
+<header><img src="apple-touch-icon.png" alt="" style="width:42px;height:42px;border-radius:10px;vertical-align:middle;margin-right:10px">DC Hunters – Training <span style="font-size:13px;opacity:.75">v5</span></header>
 <main>
 <div class="pdf-only" id="pdfDate"></div>
 <section class="card">
@@ -90,7 +90,7 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 <button class="primary" onclick="drawRound()">Nächste Runde auslosen</button>
 <button class="secondary" onclick="undoRound()">Letzte Runde löschen</button>
 </div>
-<p class="small">Die Auslosung versucht Wiederholungen zu vermeiden und verteilt Pausen möglichst fair.</p>
+<p class="small"><strong>2 Automaten:</strong> Pro Runde werden maximal zwei Spiele gleichzeitig ausgelost. Alle übrigen Spieler erhalten eine fair verteilte Pause.</p>
 </section>
 
 <section class="card">
@@ -127,7 +127,7 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
 let mode="einzel";
-let state=JSON.parse(localStorage.getItem("dc-hunters-v1")||"null")||{
+let state=JSON.parse(localStorage.getItem("dc-hunters-v5")||"null")||{
  players:[...basePlayers],guests:[],
  present:Object.fromEntries(basePlayers.map(n=>[n,true])),
  rounds:[],history:{opponents:{},pauses:{}}
@@ -135,7 +135,7 @@ let state=JSON.parse(localStorage.getItem("dc-hunters-v1")||"null")||{
 
 function allPlayers(){return [...state.players,...state.guests]}
 function euro(v){return v.toLocaleString("de-DE",{style:"currency",currency:"EUR"})}
-function persist(){localStorage.setItem("dc-hunters-v1",JSON.stringify(state))}
+function persist(){localStorage.setItem("dc-hunters-v5",JSON.stringify(state))}
 function saveNow(){persist();alert("Gespeichert.")}
 function setMode(m){mode=m;einzelBtn.classList.toggle("active",m==="einzel");doppelBtn.classList.toggle("active",m==="doppel")}
 function pairKey(a,b){return [a,b].sort().join("|")}
@@ -167,28 +167,42 @@ function renderPlayers(){
 }
 function bestPairing(list){
  let best=null;
- for(let tries=0;tries<400;tries++){
-  const shuffled=[...list].sort(()=>Math.random()-.5),pairs=[],pauses=[];
-  if(shuffled.length%2)pauses.push(shuffled.pop());
+ for(let tries=0;tries<900;tries++){
+  const shuffled=[...list].sort(()=>Math.random()-.5);
+  const active=shuffled.slice(0,Math.min(4,shuffled.length));
+  const pauses=shuffled.slice(active.length);
+  if(active.length%2===1)pauses.push(active.pop());
+  const pairs=[];
   let score=0;
-  for(let i=0;i<shuffled.length;i+=2){const a=shuffled[i],b=shuffled[i+1];score+=opponentCount(a,b)*10;pairs.push([a,b])}
-  pauses.forEach(p=>score+=(state.history.pauses[p]||0)*3);
-  if(!best||score<best.score)best={pairs,pauses,score}
+  for(let i=0;i<active.length;i+=2){
+   const a=active[i],b=active[i+1];
+   score+=opponentCount(a,b)*15;
+   pairs.push([a,b]);
+  }
+  pauses.forEach(p=>score+=(state.history.pauses[p]||0)*5);
+  if(!best||score<best.score)best={pairs,pauses,score};
  }
- return best
+ return best;
 }
 function bestDoubles(list){
  let best=null;
- for(let tries=0;tries<500;tries++){
-  const shuffled=[...list].sort(()=>Math.random()-.5),games=[],pauses=[];
-  while(shuffled.length>=4)games.push(shuffled.splice(0,4));
-  pauses.push(...shuffled);
+ for(let tries=0;tries<1200;tries++){
+  const shuffled=[...list].sort(()=>Math.random()-.5);
+  const active=shuffled.slice(0,Math.min(8,shuffled.length));
+  const pauses=shuffled.slice(active.length);
+  const games=[];
+  while(active.length>=4)games.push(active.splice(0,4));
+  pauses.push(...active);
   let score=0;
-  games.forEach(g=>{score+=opponentCount(g[0],g[2])+opponentCount(g[0],g[3])+opponentCount(g[1],g[2])+opponentCount(g[1],g[3])});
-  pauses.forEach(p=>score+=(state.history.pauses[p]||0)*3);
-  if(!best||score<best.score)best={games,pauses,score}
+  games.forEach(g=>{
+   score+=teammateCount(g[0],g[1])*8+teammateCount(g[2],g[3])*8;
+   score+=opponentCount(g[0],g[2])+opponentCount(g[0],g[3]);
+   score+=opponentCount(g[1],g[2])+opponentCount(g[1],g[3]);
+  });
+  pauses.forEach(p=>score+=(state.history.pauses[p]||0)*5);
+  if(!best||score<best.score)best={games,pauses,score};
  }
- return best
+ return best;
 }
 function drawRound(){
  const present=allPlayers().filter(n=>state.present[n]!==false);

@@ -1,12 +1,11 @@
-const CACHE="dc-hunters-v1";
+const CACHE="dc-hunters-v5";
 const FILES=[
-  "./",
-  "./index.html",
+  "./index.html?v=5",
   "./manifest.webmanifest",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./apple-touch-icon.png",
-  "./favicon-32.png"
+  "./icon-192.png?v=5",
+  "./icon-512.png?v=5",
+  "./apple-touch-icon.png?v=5",
+  "./favicon-32.png?v=5"
 ];
 self.addEventListener("install",e=>{
   self.skipWaiting();
@@ -18,5 +17,5 @@ self.addEventListener("activate",e=>e.waitUntil(
     .then(()=>self.clients.claim())
 ));
 self.addEventListener("fetch",e=>{
-  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+  e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
 });

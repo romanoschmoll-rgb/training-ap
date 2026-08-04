@@ -1,17 +1,18 @@
-DC-HUNTERS-SYMBOL AUF GITHUB AKTUALISIEREN
+UPDATE: NUR ZWEI AUTOMATEN
 
-Diese Dateien hochladen und vorhandene Dateien ersetzen:
-- index.html
-- manifest.webmanifest
-- sw.js
-- icon-192.png
-- icon-512.png
-- apple-touch-icon.png
-- favicon-32.png
+Die App lost jetzt pro Runde maximal zwei Spiele aus:
+- Einzel: höchstens 2 Einzel gleichzeitig
+- Doppel: höchstens 2 Doppel gleichzeitig
+- Alle übrigen Spieler werden als Pause angezeigt
+- Pausen werden über die Runden möglichst fair verteilt
 
-Danach:
-1. Etwa 1 Minute warten.
-2. Auf dem iPad das alte Home-Bildschirm-Symbol löschen.
-3. Den GitHub-Pages-Link erneut in Safari öffnen.
-4. Teilen → Zum Home-Bildschirm.
-5. Jetzt erscheint das DC-Hunters-Symbol mit dem Namen „DC Hunters“.
+Auf GitHub diese Dateien hochladen und ersetzen:
+index.html
+manifest.webmanifest
+sw.js
+icon-192.png
+icon-512.png
+apple-touch-icon.png
+favicon-32.png
+
+Danach etwa eine Minute warten. Auf dem iPad muss oben „v5“ stehen.
