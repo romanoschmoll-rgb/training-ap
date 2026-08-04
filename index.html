@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17324d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Training</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--dark:#17324d;--blue:#2f75b5;--line:#c8d5e2;--green:#dff3e4;--yellow:#fff4c7;--red:#fde2e2;--text:#1d2a36}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{position:sticky;top:0;z-index:20;background:var(--dark);color:#fff;padding:16px;text-align:center;font-size:23px;font-weight:800}
+main{max-width:1050px;margin:auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+h2{margin:0 0 12px;font-size:21px}
+.players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.player{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;font-size:18px;font-weight:700;background:#fff}
+.player.on{background:var(--green)}
+.player input[type=checkbox]{width:26px;height:26px}
+.player-actions{display:flex;gap:8px;align-items:center}
+.remove{background:#b64242;color:#fff;border:0;border-radius:8px;padding:7px 10px;font-size:14px}
+.tabs,.actions,.guest-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{border:0;border-radius:12px;padding:14px;font-size:17px;font-weight:800;cursor:pointer}
+.tab{background:#e9eef4}.tab.active{background:var(--dark);color:#fff}
+.primary{background:var(--blue);color:#fff}.secondary{background:#e9eef4}.danger{background:#b64242;color:#fff}
+input[type=text]{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:18px}
+.round{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:12px 0}
+.round-head{background:var(--dark);color:#fff;padding:10px;font-weight:800}
+.game{padding:12px;border-top:1px solid var(--line)}
+.match{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.team{font-size:18px;font-weight:800;text-align:center}.vs{font-weight:900}
+.result{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-size:18px;background:#fff}
+.note{padding:10px;background:var(--yellow);border-radius:10px;font-weight:700;text-align:center}
+.pause{padding:10px;background:var(--red);font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:17px}
+th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;text-align:left}.money{text-align:right}
+.small{font-size:14px;color:#566575}
+.banner{background:#fff4c7;border:1px solid #e6d679;border-radius:12px;padding:10px;margin-bottom:12px;font-weight:700}
+@media(max-width:700px){.players,.tabs,.actions,.guest-row,.result{grid-template-columns:1fr}.match{grid-template-columns:1fr}.vs{display:none}.team{text-align:left}}
+</style>
+</head>
+<body>
+<header>Training – Einzel & Doppel</header>
+<main>
+<div class="banner">Nach dem ersten Öffnen in Safari: Teilen → Zum Home-Bildschirm. Danach läuft die App offline.</div>
+
+<section class="card">
+<h2>1. Spieler und Gäste</h2>
+<div class="guest-row">
+<input id="guestName" type="text" placeholder="Name des Gastes">
+<button class="primary" onclick="addGuest()">Gast hinzufügen</button>
+</div>
+<p class="small">Gäste werden in Anwesenheit, Auslosung, Statistik und Abrechnung vollständig berücksichtigt.</p>
+<div id="players" class="players"></div>
+</section>
+
+<section class="card">
+<h2>2. Auslosung</h2>
+<div class="tabs">
+<button id="einzelBtn" class="tab active" onclick="setMode('einzel')">Einzel</button>
+<button id="doppelBtn" class="tab" onclick="setMode('doppel')">Doppel</button>
+</div>
+<div class="actions" style="margin-top:10px">
+<button class="primary" onclick="drawRound()">Nächste Runde</button>
+<button class="secondary" onclick="undoRound()">Letzte Runde löschen</button>
+</div>
+<p class="small">Die Auslosung versucht Wiederholungen zu vermeiden und verteilt Pausen möglichst fair.</p>
+</section>
+
+<section class="card">
+<h2>3. Spiele und Ergebnisse</h2>
+<div id="rounds"></div>
+</section>
+
+<section class="card">
+<h2>4. Abrechnung & Statistik</h2>
+<table>
+<thead><tr><th>Spieler</th><th>Spiele</th><th>Siege</th><th class="money">Einzel</th><th class="money">Doppel</th><th class="money">Gesamt</th></tr></thead>
+<tbody id="billing"></tbody>
+<tfoot><tr><th>Gesamt</th><th></th><th></th><th></th><th></th><th id="grandTotal" class="money">0,00 €</th></tr></tfoot>
+</table>
+</section>
+
+<section class="card">
+<div class="actions">
+<button class="secondary" onclick="saveNow()">Speichern</button>
+<button class="danger" onclick="resetDay()">Neuen Trainingstag starten</button>
+</div>
+</section>
+
+</main>
+<script>
+const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
+let mode="einzel";
+let state=JSON.parse(localStorage.getItem("training-final-v1")||"null")||{
+ players:[...basePlayers],guests:[],
+ present:Object.fromEntries(basePlayers.map(n=>[n,true])),
+ rounds:[],history:{opponents:{},pauses:{}}
+};
+
+function allPlayers(){return [...state.players,...state.guests]}
+function euro(v){return v.toLocaleString("de-DE",{style:"currency",currency:"EUR"})}
+function persist(){localStorage.setItem("training-final-v1",JSON.stringify(state))}
+function saveNow(){persist();alert("Gespeichert.")}
+function setMode(m){mode=m;einzelBtn.classList.toggle("active",m==="einzel");doppelBtn.classList.toggle("active",m==="doppel")}
+function pairKey(a,b){return [a,b].sort().join("|")}
+function opponentCount(a,b){return state.history.opponents[pairKey(a,b)]||0}
+function addOpponent(a,b){const k=pairKey(a,b);state.history.opponents[k]=(state.history.opponents[k]||0)+1}
+
+function addGuest(){
+ const input=document.getElementById("guestName"),name=input.value.trim();
+ if(!name)return;
+ if(allPlayers().some(n=>n.toLowerCase()===name.toLowerCase())){alert("Dieser Name ist schon vorhanden.");return}
+ state.guests.push(name);state.present[name]=true;state.history.pauses[name]=0;input.value="";
+ persist();renderPlayers();renderBilling()
+}
+function removeGuest(name){
+ if(state.rounds.some(r=>r.games.some(g=>g.players.includes(name)))){alert("Dieser Gast ist schon in einer Runde. Erst neuen Trainingstag starten.");return}
+ state.guests=state.guests.filter(n=>n!==name);delete state.present[name];delete state.history.pauses[name];
+ persist();renderPlayers();renderBilling()
+}
+function renderPlayers(){
+ const el=document.getElementById("players");el.innerHTML="";
+ allPlayers().forEach(n=>{
+  const label=document.createElement("label");label.className="player "+(state.present[n]!==false?"on":"");
+  const isGuest=state.guests.includes(n);
+  label.innerHTML=`<span>${n}${isGuest?' <small>(Gast)</small>':''}</span><span class="player-actions"><input type="checkbox" ${state.present[n]!==false?"checked":""}>${isGuest?'<button type="button" class="remove">Löschen</button>':""}</span>`;
+  const cb=label.querySelector("input");cb.onchange=()=>{state.present[n]=cb.checked;label.classList.toggle("on",cb.checked);persist()};
+  const rem=label.querySelector(".remove");if(rem)rem.onclick=e=>{e.preventDefault();removeGuest(n)};
+  el.appendChild(label)
+ })
+}
+function bestPairing(list){
+ let best=null;
+ for(let tries=0;tries<400;tries++){
+  const shuffled=[...list].sort(()=>Math.random()-.5),pairs=[],pauses=[];
+  if(shuffled.length%2)pauses.push(shuffled.pop());
+  let score=0;
+  for(let i=0;i<shuffled.length;i+=2){const a=shuffled[i],b=shuffled[i+1];score+=opponentCount(a,b)*10;pairs.push([a,b])}
+  pauses.forEach(p=>score+=(state.history.pauses[p]||0)*3);
+  if(!best||score<best.score)best={pairs,pauses,score}
+ }
+ return best
+}
+function bestDoubles(list){
+ let best=null;
+ for(let tries=0;tries<500;tries++){
+  const shuffled=[...list].sort(()=>Math.random()-.5),games=[],pauses=[];
+  while(shuffled.length>=4)games.push(shuffled.splice(0,4));
+  pauses.push(...shuffled);
+  let score=0;
+  games.forEach(g=>{score+=opponentCount(g[0],g[2])+opponentCount(g[0],g[3])+opponentCount(g[1],g[2])+opponentCount(g[1],g[3])});
+  pauses.forEach(p=>score+=(state.history.pauses[p]||0)*3);
+  if(!best||score<best.score)best={games,pauses,score}
+ }
+ return best
+}
+function drawRound(){
+ const present=allPlayers().filter(n=>state.present[n]!==false);
+ if(mode==="einzel"&&present.length<2){alert("Mindestens 2 Spieler nötig.");return}
+ if(mode==="doppel"&&present.length<4){alert("Mindestens 4 Spieler nötig.");return}
+ let games=[],pauses=[];
+ if(mode==="einzel"){const x=bestPairing(present);games=x.pairs.map(p=>({players:p,result:""}));pauses=x.pauses}
+ else{const x=bestDoubles(present);games=x.games.map(g=>({players:g,result:""}));pauses=x.pauses}
+ pauses.forEach(p=>state.history.pauses[p]=(state.history.pauses[p]||0)+1);
+ games.forEach(g=>{if(mode==="einzel")addOpponent(g.players[0],g.players[1]);else{addOpponent(g.players[0],g.players[2]);addOpponent(g.players[0],g.players[3]);addOpponent(g.players[1],g.players[2]);addOpponent(g.players[1],g.players[3])}});
+ state.rounds.push({id:Date.now(),mode,games,pauses});persist();renderRounds();renderBilling()
+}
+function undoRound(){if(state.rounds.length){state.rounds.pop();rebuildHistory();persist();renderRounds();renderBilling()}}
+function rebuildHistory(){
+ state.history={opponents:{},pauses:Object.fromEntries(allPlayers().map(n=>[n,0]))};
+ state.rounds.forEach(r=>{r.pauses.forEach(p=>state.history.pauses[p]=(state.history.pauses[p]||0)+1);r.games.forEach(g=>{if(r.mode==="einzel")addOpponent(g.players[0],g.players[1]);else{addOpponent(g.players[0],g.players[2]);addOpponent(g.players[0],g.players[3]);addOpponent(g.players[1],g.players[2]);addOpponent(g.players[1],g.players[3])}})})
+}
+function setResult(id,index,value){const r=state.rounds.find(x=>x.id===id);if(r){r.games[index].result=value;persist();renderRounds();renderBilling()}}
+function rule(r,g){
+ if(!g.result)return "Noch kein Ergebnis";
+ if(r.mode==="einzel"){if(g.result==="2:1")return g.players[0]+" zahlt zusätzlich 0,50 €";if(g.result==="1:2")return g.players[1]+" zahlt zusätzlich 0,50 €";return "Beide zahlen je 0,50 €"}
+ const t1=g.players[0]+" + "+g.players[1],t2=g.players[2]+" + "+g.players[3];
+ if(g.result==="2:1")return t1+": beide zusätzlich je 0,50 €";
+ if(g.result==="1:2")return t2+": beide zusätzlich je 0,50 €";
+ return "Alle vier zahlen je 0,50 €"
+}
+function renderRounds(){
+ const el=document.getElementById("rounds");el.innerHTML="";
+ if(!state.rounds.length){el.innerHTML='<p class="small">Noch keine Runde ausgelost.</p>';return}
+ state.rounds.forEach((r,ri)=>{
+  const box=document.createElement("div");box.className="round";box.innerHTML='<div class="round-head">Runde '+(ri+1)+' – '+(r.mode==="einzel"?"Einzel":"Doppel")+'</div>';
+  r.games.forEach((g,gi)=>{
+   const left=r.mode==="einzel"?g.players[0]:g.players[0]+" + "+g.players[1],right=r.mode==="einzel"?g.players[1]:g.players[2]+" + "+g.players[3];
+   const div=document.createElement("div");div.className="game";
+   div.innerHTML='<div class="match"><div class="team">'+left+'</div><div class="vs">gegen</div><div class="team">'+right+'</div></div><div class="result"><select><option value="">Ergebnis wählen</option><option value="2:0">2 : 0</option><option value="2:1">2 : 1</option><option value="1:2">1 : 2</option><option value="0:2">0 : 2</option></select><div class="note">'+rule(r,g)+'</div></div>';
+   const s=div.querySelector("select");s.value=g.result;s.onchange=()=>setResult(r.id,gi,s.value);box.appendChild(div)
+  });
+  if(r.pauses.length){const p=document.createElement("div");p.className="pause";p.textContent="Pause: "+r.pauses.join(", ");box.appendChild(p)}
+  el.appendChild(box)
+ })
+}
+function calc(){
+ const bill=Object.fromEntries(allPlayers().map(n=>[n,{einzel:0,doppel:0,spiele:0,siege:0}]));
+ state.rounds.forEach(r=>r.games.forEach(g=>{
+  if(!g.result)return;
+  g.players.forEach(p=>{bill[p][r.mode]+=0.5;bill[p].spiele+=1});
+  if(r.mode==="einzel"){
+   if(g.result==="2:0"||g.result==="2:1")bill[g.players[0]].siege+=1;
+   if(g.result==="0:2"||g.result==="1:2")bill[g.players[1]].siege+=1;
+   if(g.result==="2:1")bill[g.players[0]].einzel+=0.5;
+   if(g.result==="1:2")bill[g.players[1]].einzel+=0.5;
+  }else{
+   if(g.result==="2:0"||g.result==="2:1"){bill[g.players[0]].siege+=1;bill[g.players[1]].siege+=1}
+   if(g.result==="0:2"||g.result==="1:2"){bill[g.players[2]].siege+=1;bill[g.players[3]].siege+=1}
+   if(g.result==="2:1"){bill[g.players[0]].doppel+=0.5;bill[g.players[1]].doppel+=0.5}
+   if(g.result==="1:2"){bill[g.players[2]].doppel+=0.5;bill[g.players[3]].doppel+=0.5}
+  }
+ }));
+ return bill
+}
+function renderBilling(){
+ const b=calc(),tbody=document.getElementById("billing");tbody.innerHTML="";let total=0;
+ allPlayers().forEach(n=>{
+  const sum=b[n].einzel+b[n].doppel;total+=sum;
+  const tr=document.createElement("tr");
+  tr.innerHTML='<td>'+n+'</td><td>'+b[n].spiele+'</td><td>'+b[n].siege+'</td><td class="money">'+euro(b[n].einzel)+'</td><td class="money">'+euro(b[n].doppel)+'</td><td class="money"><b>'+euro(sum)+'</b></td>';
+  tbody.appendChild(tr)
+ });
+ grandTotal.textContent=euro(total)
+}
+function resetDay(){
+ if(confirm("Neuen Trainingstag starten und alle Runden löschen?")){
+  state.rounds=[];state.history={opponents:{},pauses:Object.fromEntries(allPlayers().map(n=>[n,0]))};persist();renderRounds();renderBilling()
+ }
+}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js")}
+renderPlayers();renderRounds();renderBilling();
+</script>
+</body>
+</html>

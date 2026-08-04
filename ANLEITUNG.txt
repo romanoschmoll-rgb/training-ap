@@ -1,0 +1,6 @@
+GitHub Pages:
+1. Neuen öffentlichen GitHub-Ordner anlegen.
+2. Alle Dateien aus diesem Ordner hochladen.
+3. Settings > Pages > Deploy from branch > main / root.
+4. Link öffnen.
+5. Auf dem iPad in Safari: Teilen > Zum Home-Bildschirm.
