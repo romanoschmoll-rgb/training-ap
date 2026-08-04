@@ -1,14 +1,15 @@
-UPDATE v8 – SPIELER NACH DER AUSLOSUNG ÄNDERN
+UPDATE v9 – NEUES DC-HUNTERS-DESIGN
 
 Neu:
-- Jeden Spielernamen in einer Partie antippen.
-- Einen anderen anwesenden Spieler auswählen.
-- Spieler aus der Pause werden automatisch eingewechselt.
-- Ist der gewählte Spieler bereits in einem anderen Spiel derselben Runde,
-  werden die beiden Spieler automatisch getauscht.
-- Doppelte Einsätze in derselben Runde werden verhindert.
-- Ein vorhandenes Ergebnis wird beim Spielerwechsel gelöscht.
-- Pausen, Statistik und Abrechnung werden automatisch aktualisiert.
+- Dunkles Schwarz-/Anthrazit-Design
+- Goldene Hauptfarben passend zum Logo
+- Grün = anwesend / aktiv
+- Rot = Pause oder Löschen
+- Ergebnisfelder deutlicher hervorgehoben
+- Spielkarten und Tabellen übersichtlicher
+- Größere Bedienelemente für das iPad
+- PDF-Druck bleibt hell und gut lesbar
+- Alle bisherigen Funktionen bleiben erhalten
 
 Auf GitHub diese Dateien hochladen und ersetzen:
 index.html
@@ -19,4 +20,4 @@ icon-512.png
 apple-touch-icon.png
 favicon-32.png
 
-Danach etwa eine Minute warten. Auf dem iPad muss oben „v8“ stehen.
+Danach etwa eine Minute warten. Oben muss „v9“ stehen.
