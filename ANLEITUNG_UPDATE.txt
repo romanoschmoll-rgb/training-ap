@@ -1,0 +1,12 @@
+UPDATE AUF GITHUB:
+1. Im Repository auf „Datei hinzufügen“ → „Dateien hochladen“.
+2. Diese fünf Dateien hochladen:
+   index.html
+   sw.js
+   manifest.webmanifest
+   icon-192.png
+   icon-512.png
+3. Vorhandene Dateien ersetzen und Änderungen bestätigen.
+4. Etwa 1 Minute warten.
+5. Auf dem iPad die App schließen und neu öffnen.
+6. Falls noch die alte Version erscheint: Safari-Link öffnen und neu laden.

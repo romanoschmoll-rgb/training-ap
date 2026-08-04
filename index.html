@@ -38,8 +38,8 @@ select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;f
 table{width:100%;border-collapse:collapse;font-size:17px}
 th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;text-align:left}.money{text-align:right}
 .small{font-size:14px;color:#566575}
-.banner{background:#fff4c7;border:1px solid #e6d679;border-radius:12px;padding:10px;margin-bottom:12px;font-weight:700}
-@media(max-width:700px){.players,.tabs,.actions,.guest-row,.result{grid-template-columns:1fr}.match{grid-template-columns:1fr}.vs{display:none}.team{text-align:left}}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.summary-box{border:1px solid var(--line);border-radius:13px;padding:12px;background:#f9fbfd}.summary-box strong{display:block;font-size:26px;margin-top:4px}.banner{background:#fff4c7;border:1px solid #e6d679;border-radius:12px;padding:10px;margin-bottom:12px;font-weight:700}
+@media(max-width:700px){.players,.tabs,.actions,.guest-row,.result,.summary-grid{grid-template-columns:1fr}.match{grid-template-columns:1fr}.vs{display:none}.team{text-align:left}}
 </style>
 </head>
 <body>
@@ -64,7 +64,7 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 <button id="doppelBtn" class="tab" onclick="setMode('doppel')">Doppel</button>
 </div>
 <div class="actions" style="margin-top:10px">
-<button class="primary" onclick="drawRound()">Nächste Runde</button>
+<button class="primary" onclick="drawRound()">Nächste Runde auslosen</button>
 <button class="secondary" onclick="undoRound()">Letzte Runde löschen</button>
 </div>
 <p class="small">Die Auslosung versucht Wiederholungen zu vermeiden und verteilt Pausen möglichst fair.</p>
@@ -76,11 +76,19 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 </section>
 
 <section class="card">
-<h2>4. Abrechnung & Statistik</h2>
+<h2>4. Tagesübersicht</h2>
+<div class="summary-grid">
+  <div class="summary-box">Gespielte Partien<strong id="summaryMatches">0</strong></div>
+  <div class="summary-box">Gesamtkosten<strong id="summaryMoney">0,00 €</strong></div>
+</div>
+</section>
+
+<section class="card">
+<h2>5. Abrechnung & Statistik</h2>
 <table>
-<thead><tr><th>Spieler</th><th>Spiele</th><th>Siege</th><th class="money">Einzel</th><th class="money">Doppel</th><th class="money">Gesamt</th></tr></thead>
+<thead><tr><th>Spieler</th><th>Spiele</th><th>Siege</th><th>Pausen</th><th class="money">Einzel</th><th class="money">Doppel</th><th class="money">Gesamt</th></tr></thead>
 <tbody id="billing"></tbody>
-<tfoot><tr><th>Gesamt</th><th></th><th></th><th></th><th></th><th id="grandTotal" class="money">0,00 €</th></tr></tfoot>
+<tfoot><tr><th>Gesamt</th><th></th><th></th><th></th><th></th><th></th><th id="grandTotal" class="money">0,00 €</th></tr></tfoot>
 </table>
 </section>
 
@@ -95,7 +103,7 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
 let mode="einzel";
-let state=JSON.parse(localStorage.getItem("training-final-v1")||"null")||{
+let state=JSON.parse(localStorage.getItem("training-final-v2")||"null")||{
  players:[...basePlayers],guests:[],
  present:Object.fromEntries(basePlayers.map(n=>[n,true])),
  rounds:[],history:{opponents:{},pauses:{}}
@@ -103,7 +111,7 @@ let state=JSON.parse(localStorage.getItem("training-final-v1")||"null")||{
 
 function allPlayers(){return [...state.players,...state.guests]}
 function euro(v){return v.toLocaleString("de-DE",{style:"currency",currency:"EUR"})}
-function persist(){localStorage.setItem("training-final-v1",JSON.stringify(state))}
+function persist(){localStorage.setItem("training-final-v2",JSON.stringify(state))}
 function saveNow(){persist();alert("Gespeichert.")}
 function setMode(m){mode=m;einzelBtn.classList.toggle("active",m==="einzel");doppelBtn.classList.toggle("active",m==="doppel")}
 function pairKey(a,b){return [a,b].sort().join("|")}
@@ -199,7 +207,7 @@ function renderRounds(){
  })
 }
 function calc(){
- const bill=Object.fromEntries(allPlayers().map(n=>[n,{einzel:0,doppel:0,spiele:0,siege:0}]));
+ const bill=Object.fromEntries(allPlayers().map(n=>[n,{einzel:0,doppel:0,spiele:0,siege:0,pausen:state.history.pauses[n]||0}]));
  state.rounds.forEach(r=>r.games.forEach(g=>{
   if(!g.result)return;
   g.players.forEach(p=>{bill[p][r.mode]+=0.5;bill[p].spiele+=1});
@@ -222,10 +230,10 @@ function renderBilling(){
  allPlayers().forEach(n=>{
   const sum=b[n].einzel+b[n].doppel;total+=sum;
   const tr=document.createElement("tr");
-  tr.innerHTML='<td>'+n+'</td><td>'+b[n].spiele+'</td><td>'+b[n].siege+'</td><td class="money">'+euro(b[n].einzel)+'</td><td class="money">'+euro(b[n].doppel)+'</td><td class="money"><b>'+euro(sum)+'</b></td>';
+  tr.innerHTML='<td>'+n+'</td><td>'+b[n].spiele+'</td><td>'+b[n].siege+'</td><td>'+b[n].pausen+'</td><td class="money">'+euro(b[n].einzel)+'</td><td class="money">'+euro(b[n].doppel)+'</td><td class="money"><b>'+euro(sum)+'</b></td>';
   tbody.appendChild(tr)
  });
- grandTotal.textContent=euro(total)
+ grandTotal.textContent=euro(total);document.getElementById("summaryMoney").textContent=euro(total);document.getElementById("summaryMatches").textContent=state.rounds.reduce((s,r)=>s+r.games.filter(g=>g.result).length,0)
 }
 function resetDay(){
  if(confirm("Neuen Trainingstag starten und alle Runden löschen?")){
