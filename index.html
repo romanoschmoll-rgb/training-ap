@@ -33,7 +33,7 @@ input[type=text]{width:100%;padding:12px;border:1px solid var(--line);border-rad
 .match{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
 .team{font-size:18px;font-weight:800;text-align:center}.vs{font-weight:900}
 .result{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-size:18px;background:#fff}
+.player-choice{font-weight:800;text-align:center;background:#f7fafc}.team-selects{display:grid;grid-template-columns:1fr 1fr;gap:6px}select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-size:18px;background:#fff}
 .note{padding:10px;background:var(--yellow);border-radius:10px;font-weight:700;text-align:center}
 .pause{padding:10px;background:var(--red);font-weight:700}
 table{width:100%;border-collapse:collapse;font-size:17px}
@@ -67,7 +67,7 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="" style="width:42px;height:42px;border-radius:10px;vertical-align:middle;margin-right:10px">DC Hunters – Training <span style="font-size:13px;opacity:.75">v6</span></header>
+<header><img src="apple-touch-icon.png" alt="" style="width:42px;height:42px;border-radius:10px;vertical-align:middle;margin-right:10px">DC Hunters – Training <span style="font-size:13px;opacity:.75">v8</span></header>
 <main>
 <div class="pdf-only" id="pdfDate"></div>
 <section class="card">
@@ -90,7 +90,7 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 <button class="primary" onclick="drawRound()">Nächste Runde auslosen</button>
 <button class="secondary" onclick="undoRound()">Letzte Runde löschen</button>
 </div>
-<p class="small"><strong>2 Automaten:</strong> Pro Runde werden maximal zwei Spiele gleichzeitig ausgelost. Alle übrigen Spieler erhalten eine fair verteilte Pause.</p>
+<p class="small"><strong>2 Automaten:</strong> Maximal zwei Spiele pro Runde. Nach der Auslosung kannst du jeden Spielernamen antippen und bei Bedarf austauschen.</p>
 </section>
 
 <section class="card">
@@ -127,7 +127,7 @@ th,td{padding:10px;border-bottom:1px solid var(--line)}th{background:#edf3f8;tex
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
 let mode="einzel";
-let state=JSON.parse(localStorage.getItem("dc-hunters-v6")||"null")||{
+let state=JSON.parse(localStorage.getItem("dc-hunters-v8")||"null")||{
  players:[...basePlayers],guests:[],
  present:Object.fromEntries(basePlayers.map(n=>[n,true])),
  rounds:[],history:{opponents:{},pauses:{}}
@@ -135,7 +135,7 @@ let state=JSON.parse(localStorage.getItem("dc-hunters-v6")||"null")||{
 
 function allPlayers(){return [...state.players,...state.guests]}
 function euro(v){return v.toLocaleString("de-DE",{style:"currency",currency:"EUR"})}
-function persist(){localStorage.setItem("dc-hunters-v6",JSON.stringify(state))}
+function persist(){localStorage.setItem("dc-hunters-v8",JSON.stringify(state))}
 function saveNow(){persist();alert("Gespeichert.")}
 function setMode(m){mode=m;einzelBtn.classList.toggle("active",m==="einzel");doppelBtn.classList.toggle("active",m==="doppel")}
 function pairKey(a,b){return [a,b].sort().join("|")}
@@ -195,8 +195,7 @@ function bestDoubles(list){
   pauses.push(...active);
   let score=0;
   games.forEach(g=>{
-   score+=teammateCount(g[0],g[1])*8+teammateCount(g[2],g[3])*8;
-   score+=opponentCount(g[0],g[2])+opponentCount(g[0],g[3]);
+      score+=opponentCount(g[0],g[2])+opponentCount(g[0],g[3]);
    score+=opponentCount(g[1],g[2])+opponentCount(g[1],g[3]);
   });
   pauses.forEach(p=>score+=(state.history.pauses[p]||0)*5);
@@ -220,26 +219,132 @@ function rebuildHistory(){
  state.history={opponents:{},pauses:Object.fromEntries(allPlayers().map(n=>[n,0]))};
  state.rounds.forEach(r=>{r.pauses.forEach(p=>state.history.pauses[p]=(state.history.pauses[p]||0)+1);r.games.forEach(g=>{if(r.mode==="einzel")addOpponent(g.players[0],g.players[1]);else{addOpponent(g.players[0],g.players[2]);addOpponent(g.players[0],g.players[3]);addOpponent(g.players[1],g.players[2]);addOpponent(g.players[1],g.players[3])}})})
 }
-function setResult(id,index,value){const r=state.rounds.find(x=>x.id===id);if(r){r.games[index].result=value;persist();renderRounds();renderBilling()}}
+function setResult(id,index,value){
+ const r=state.rounds.find(x=>x.id===id);
+ if(r){
+  r.games[index].result=value;
+  persist();
+  renderRounds();
+  renderBilling();
+ }
+}
+function playerOptions(current){
+ const allowed=allPlayers().filter(n=>state.present[n]!==false||n===current);
+ return allowed.map(n=>'<option value="'+n.replace(/"/g,"&quot;")+'" '+(n===current?"selected":"")+'>'+n+'</option>').join("");
+}
+function changePlayer(roundId,gameIndex,slot,newName){
+ const r=state.rounds.find(x=>x.id===roundId);
+ if(!r)return;
+ const game=r.games[gameIndex];
+ const oldName=game.players[slot];
+ if(!newName||newName===oldName)return;
+
+ let otherPosition=null;
+ r.games.forEach((otherGame,gi)=>{
+  otherGame.players.forEach((name,si)=>{
+   if(name===newName&&!(gi===gameIndex&&si===slot)){
+    otherPosition={gi,si};
+   }
+  });
+ });
+
+ if(otherPosition){
+  r.games[otherPosition.gi].players[otherPosition.si]=oldName;
+ }else{
+  const pauseIndex=r.pauses.indexOf(newName);
+  if(pauseIndex>=0){
+   r.pauses[pauseIndex]=oldName;
+  }else if(!r.pauses.includes(oldName)){
+   r.pauses.push(oldName);
+  }
+ }
+
+ game.players[slot]=newName;
+
+ if(game.result){
+  game.result="";
+  alert("Das Ergebnis wurde gelöscht, weil ein Spieler geändert wurde.");
+ }
+
+ rebuildHistory();
+ persist();
+ renderRounds();
+ renderBilling();
+}
 function rule(r,g){
  if(!g.result)return "Noch kein Ergebnis";
  if(g.result==="2:0"||g.result==="0:2")return "Jeder beteiligte Spieler zahlt 1,00 €";
  return "Jeder beteiligte Spieler zahlt 1,50 €";
 }
 function renderRounds(){
- const el=document.getElementById("rounds");el.innerHTML="";
- if(!state.rounds.length){el.innerHTML='<p class="small">Noch keine Runde ausgelost.</p>';return}
+ const el=document.getElementById("rounds");
+ el.innerHTML="";
+ if(!state.rounds.length){
+  el.innerHTML='<p class="small">Noch keine Runde ausgelost.</p>';
+  return;
+ }
  state.rounds.forEach((r,ri)=>{
-  const box=document.createElement("div");box.className="round";box.innerHTML='<div class="round-head">Runde '+(ri+1)+' – '+(r.mode==="einzel"?"Einzel":"Doppel")+'</div>';
+  const box=document.createElement("div");
+  box.className="round";
+  box.innerHTML='<div class="round-head">Runde '+(ri+1)+' – '+(r.mode==="einzel"?"Einzel":"Doppel")+'</div>';
+
   r.games.forEach((g,gi)=>{
-   const left=r.mode==="einzel"?g.players[0]:g.players[0]+" + "+g.players[1],right=r.mode==="einzel"?g.players[1]:g.players[2]+" + "+g.players[3];
-   const div=document.createElement("div");div.className="game";
-   div.innerHTML='<div class="match"><div class="team">'+left+'</div><div class="vs">gegen</div><div class="team">'+right+'</div></div><div class="result"><select><option value="">Ergebnis wählen</option><option value="2:0">2 : 0</option><option value="2:1">2 : 1</option><option value="1:2">1 : 2</option><option value="0:2">0 : 2</option></select><div class="note">'+rule(r,g)+'</div></div>';
-   const s=div.querySelector("select");s.value=g.result;s.onchange=()=>setResult(r.id,gi,s.value);box.appendChild(div)
+   const div=document.createElement("div");
+   div.className="game";
+
+   let matchHtml="";
+   if(r.mode==="einzel"){
+    matchHtml=
+      '<div class="match">'+
+       '<select class="player-choice" data-slot="0">'+playerOptions(g.players[0])+'</select>'+
+       '<div class="vs">gegen</div>'+
+       '<select class="player-choice" data-slot="1">'+playerOptions(g.players[1])+'</select>'+
+      '</div>';
+   }else{
+    matchHtml=
+      '<div class="match">'+
+       '<div class="team-selects">'+
+        '<select class="player-choice" data-slot="0">'+playerOptions(g.players[0])+'</select>'+
+        '<select class="player-choice" data-slot="1">'+playerOptions(g.players[1])+'</select>'+
+       '</div>'+
+       '<div class="vs">gegen</div>'+
+       '<div class="team-selects">'+
+        '<select class="player-choice" data-slot="2">'+playerOptions(g.players[2])+'</select>'+
+        '<select class="player-choice" data-slot="3">'+playerOptions(g.players[3])+'</select>'+
+       '</div>'+
+      '</div>';
+   }
+
+   div.innerHTML=matchHtml+
+    '<div class="result">'+
+     '<select class="result-select">'+
+      '<option value="">Ergebnis wählen</option>'+
+      '<option value="2:0">2 : 0</option>'+
+      '<option value="2:1">2 : 1</option>'+
+      '<option value="1:2">1 : 2</option>'+
+      '<option value="0:2">0 : 2</option>'+
+     '</select>'+
+     '<div class="note">'+rule(r,g)+'</div>'+
+    '</div>';
+
+   div.querySelectorAll(".player-choice").forEach(sel=>{
+    sel.onchange=()=>changePlayer(r.id,gi,Number(sel.dataset.slot),sel.value);
+   });
+
+   const resultSelect=div.querySelector(".result-select");
+   resultSelect.value=g.result;
+   resultSelect.onchange=()=>setResult(r.id,gi,resultSelect.value);
+   box.appendChild(div);
   });
-  if(r.pauses.length){const p=document.createElement("div");p.className="pause";p.textContent="Pause: "+r.pauses.join(", ");box.appendChild(p)}
-  el.appendChild(box)
- })
+
+  if(r.pauses.length){
+   const p=document.createElement("div");
+   p.className="pause";
+   p.textContent="Pause: "+r.pauses.join(", ");
+   box.appendChild(p);
+  }
+  el.appendChild(box);
+ });
 }
 function calc(){
  const bill=Object.fromEntries(allPlayers().map(n=>[n,{einzel:0,doppel:0,spiele:0,siege:0,pausen:state.history.pauses[n]||0}]));

@@ -1,12 +1,14 @@
-UPDATE v6 – KOSTENREGEL
+UPDATE v8 – SPIELER NACH DER AUSLOSUNG ÄNDERN
 
-Neue Regel:
-- Ein Leg kostet 0,50 €.
-- Ergebnis 2:0 oder 0:2:
-  Jeder beteiligte Spieler zahlt 1,00 €.
-- Ergebnis 2:1 oder 1:2:
-  Jeder beteiligte Spieler zahlt 1,50 €.
-- Im Doppel gilt dieselbe Regel für alle vier Spieler.
+Neu:
+- Jeden Spielernamen in einer Partie antippen.
+- Einen anderen anwesenden Spieler auswählen.
+- Spieler aus der Pause werden automatisch eingewechselt.
+- Ist der gewählte Spieler bereits in einem anderen Spiel derselben Runde,
+  werden die beiden Spieler automatisch getauscht.
+- Doppelte Einsätze in derselben Runde werden verhindert.
+- Ein vorhandenes Ergebnis wird beim Spielerwechsel gelöscht.
+- Pausen, Statistik und Abrechnung werden automatisch aktualisiert.
 
 Auf GitHub diese Dateien hochladen und ersetzen:
 index.html
@@ -17,4 +19,4 @@ icon-512.png
 apple-touch-icon.png
 favicon-32.png
 
-Danach etwa eine Minute warten. Auf dem iPad muss oben „v6“ stehen.
+Danach etwa eine Minute warten. Auf dem iPad muss oben „v8“ stehen.
