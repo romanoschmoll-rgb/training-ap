@@ -1,22 +1,17 @@
-DC Hunters v15
+DC Hunters v16
 
-FREUNDSCHAFTSSPIEL:
-- Heimteam fest DC Hunters.
-- H1-H4 und HE1-HE4 aus eurer Trainings-Spielerliste auswählen.
-- Gastspieler G1-G4 und GE1-GE4 manuell eintragen.
-- Liga nur A / B / C.
-- Status grau / gelb / grün.
-- Maximal zwei Begegnungen gleichzeitig aktiv.
-- Spielerwechsel möglich.
-- Automatische Ergebnis- und Gesamtwertung.
-
-NEU v15 – ABRECHNUNG:
-- 2:0 / 0:2 = jeder beteiligte Spieler 1,00 €.
-- 2:1 / 1:2 = jeder beteiligte Spieler 1,50 €.
-- Im Doppel zahlen alle vier beteiligten Spieler entsprechend.
-- Abrechnung getrennt für DC Hunters und Gastmannschaft.
-- Gesamtsumme wird angezeigt.
-- PDF-Spielbericht enthält die Abrechnung.
+KORREKTUR FREUNDSCHAFTSSPIEL:
+- Liga-Auswahl: A, B, C, BZ, BZO.
+- A / B / C spielen genau Doppel 1 und Doppel 2.
+- BZ / BZO spielen Doppel 1 bis Doppel 4.
+- Doppelreihenfolge nach dem fotografierten Spielberichtsbogen:
+  1: H1+H2 gegen G1+G2
+  2: H3+H4 gegen G3+G4
+  3: H1+H2 gegen G3+G4
+  4: H3+H4 gegen G1+G2
+- In A/B/C werden Doppel 3 und 4 NICHT erzeugt.
+- In BZ/BZO werden alle vier Doppel erzeugt.
+- Einzel, Spielerwechsel, Statusfarben und Abrechnung bleiben erhalten.
 
 Auf GitHub alle enthaltenen Dateien ersetzen.
-Danach muss oben v15 stehen.
+Danach muss oben v16 stehen.

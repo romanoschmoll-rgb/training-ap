@@ -127,7 +127,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v15</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v16</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -225,10 +225,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </div>
 <div id="friendlyView" class="view-hidden">
 <section class="card">
-<h2>Freundschaftsspiel – Liga A / B / C</h2>
+<h2>Freundschaftsspiel – Liga A / B / C / BZ / BZO</h2>
 <div class="grid3">
 <label><span class="small">Datum</span><input id="fDate" type="date"></label>
-<label><span class="small">Liga</span><select id="fLeague"><option>A</option><option>B</option><option>C</option></select></label>
+<label><span class="small">Liga</span><select id="fLeague"><option>A</option><option>B</option><option>C</option><option>BZ</option><option>BZO</option></select></label>
 <label><span class="small">Spiel-Nr.</span><input id="fMatchNo" placeholder="z. B. 1"></label>
 </div>
 </section>
@@ -239,7 +239,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="team-card"><label><span class="small">Heimteam</span><input id="fHomeTeam" value="DC Hunters" readonly></label><div id="fHomeRoster"></div></div>
 <div class="team-card"><label><span class="small">Gastteam</span><input id="fGuestTeam" placeholder="Name Gastmannschaft"></label><div id="fGuestRoster"></div></div>
 </div>
-<p class="small">H1–H4 und HE1–HE4 werden aus eurer DC-Hunters-Spielerliste ausgewählt. G1–G4 und GE1–GE4 werden für die Gastmannschaft manuell eingetragen.</p>
+<p class="small">H1–H4 und HE1–HE4 werden aus eurer DC-Hunters-Spielerliste ausgewählt. G1–G4 und GE1–GE4 werden manuell eingetragen. A/B/C spielen Doppel 1–2, BZ/BZO spielen Doppel 1–4.</p>
 <div class="actions"><button class="primary" onclick="createFriendly()">Spielplan erstellen</button><button class="danger" onclick="resetFriendly()">Freundschaftsspiel zurücksetzen</button></div>
 </section>
 
@@ -286,7 +286,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </main>
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
-const STORAGE="dc-hunters-v15";
+const STORAGE="dc-hunters-v16";
 let mode="einzel";
 let state=JSON.parse(localStorage.getItem(STORAGE)||"null")||{
  players:[...basePlayers],guests:[],present:Object.fromEntries(basePlayers.map(n=>[n,true])),
@@ -504,16 +504,32 @@ function showAppView(v){
  trainingView.classList.toggle("view-hidden",v!=="training");friendlyView.classList.toggle("view-hidden",v!=="friendly");
  trainingViewBtn.classList.toggle("active",v==="training");friendlyViewBtn.classList.toggle("active",v==="friendly");
 }
-const FRIENDLY_KEY="dc-hunters-friendly-v15";
+const FRIENDLY_KEY="dc-hunters-friendly-v16";
 let friendly=JSON.parse(localStorage.getItem(FRIENDLY_KEY)||"null")||{home:["","","","","","","",""],guest:["","","","","","","",""],fixtures:[],archive:[]};
 if(!friendly.archive)friendly.archive=[];
 const fLabelsHome=["H1","H2","H3","H4","HE1","HE2","HE3","HE4"],fLabelsGuest=["G1","G2","G3","G4","GE1","GE2","GE3","GE4"];
-const fSchedule=[
- {r:1,type:"Doppel",h:[0,1],g:[0,1]},{r:1,type:"Einzel",h:[0],g:[0]},{r:1,type:"Einzel",h:[1],g:[1]},{r:1,type:"Einzel",h:[2],g:[2]},{r:1,type:"Einzel",h:[3],g:[3]},
- {r:2,type:"Doppel",h:[2,3],g:[2,3]},{r:2,type:"Einzel",h:[0],g:[1]},{r:2,type:"Einzel",h:[1],g:[0]},{r:2,type:"Einzel",h:[2],g:[3]},{r:2,type:"Einzel",h:[3],g:[2]},
- {r:3,type:"Doppel",h:[0,1],g:[2,3]},{r:3,type:"Einzel",h:[0],g:[3]},{r:3,type:"Einzel",h:[1],g:[2]},{r:3,type:"Einzel",h:[2],g:[1]},{r:3,type:"Einzel",h:[3],g:[0]},
- {r:4,type:"Doppel",h:[2,3],g:[0,1]},{r:4,type:"Einzel",h:[0],g:[2]},{r:4,type:"Einzel",h:[1],g:[3]},{r:4,type:"Einzel",h:[2],g:[0]},{r:4,type:"Einzel",h:[3],g:[1]}
+const fSingles=[
+ {r:1,type:"Einzel",h:[0],g:[0]},{r:1,type:"Einzel",h:[1],g:[1]},{r:1,type:"Einzel",h:[2],g:[2]},{r:1,type:"Einzel",h:[3],g:[3]},
+ {r:2,type:"Einzel",h:[0],g:[1]},{r:2,type:"Einzel",h:[1],g:[0]},{r:2,type:"Einzel",h:[2],g:[3]},{r:2,type:"Einzel",h:[3],g:[2]},
+ {r:3,type:"Einzel",h:[0],g:[3]},{r:3,type:"Einzel",h:[1],g:[2]},{r:3,type:"Einzel",h:[2],g:[1]},{r:3,type:"Einzel",h:[3],g:[0]},
+ {r:4,type:"Einzel",h:[0],g:[2]},{r:4,type:"Einzel",h:[1],g:[3]},{r:4,type:"Einzel",h:[2],g:[0]},{r:4,type:"Einzel",h:[3],g:[1]}
 ];
+const fDoublesAll=[
+ {no:1,r:1,type:"Doppel 1",h:[0,1],g:[0,1]},
+ {no:2,r:2,type:"Doppel 2",h:[2,3],g:[2,3]},
+ {no:3,r:3,type:"Doppel 3",h:[0,1],g:[2,3]},
+ {no:4,r:4,type:"Doppel 4",h:[2,3],g:[0,1]}
+];
+function friendlyScheduleForLeague(league){
+ const doubleCount=(league==="BZ"||league==="BZO")?4:2;
+ const doubles=fDoublesAll.filter(x=>x.no<=doubleCount);
+ const schedule=[];
+ [1,2,3,4].forEach(r=>{
+   doubles.filter(x=>x.r===r).forEach(x=>schedule.push({...x}));
+   fSingles.filter(x=>x.r===r).forEach(x=>schedule.push({...x}));
+ });
+ return schedule;
+}
 function persistFriendly(){
  friendly.home=fLabelsHome.map((_,i)=>document.getElementById("fh"+i)?.value??friendly.home[i]??"");
  friendly.guest=fLabelsGuest.map((_,i)=>document.getElementById("fg"+i)?.value??friendly.guest[i]??"");
@@ -557,7 +573,7 @@ function createFriendly(){
  if(!friendly.home.slice(0,4).every(Boolean)||!friendly.guest.slice(0,4).every(Boolean)){alert("Bitte mindestens H1–H4 und G1–G4 eintragen.");return}
  const homeMain=friendly.home.slice(0,4);
  if(new Set(homeMain).size!==homeMain.length){alert("Bei H1–H4 darf kein Spieler doppelt ausgewählt werden.");return}
- friendly.fixtures=fSchedule.map((x,i)=>({id:Date.now()+i,r:x.r,type:x.type,h:[...x.h],g:[...x.g],status:"planned",result:""}));
+ const selectedSchedule=friendlyScheduleForLeague(fLeague.value); friendly.fixtures=selectedSchedule.map((x,i)=>({id:Date.now()+i,r:x.r,type:x.type,h:[...x.h],g:[...x.g],status:"planned",result:""}));
  persistFriendly();renderFriendly();
 }
 function fActiveCount(){return friendly.fixtures.filter(x=>x.status==="active").length}
@@ -673,13 +689,14 @@ function renderFriendly(){
  fHomeGames.textContent=hg;fGuestGames.textContent=gg;fDoneCount.textContent=done;
  const active=fActiveCount(),open=friendly.fixtures.length-done;
  fOverall.className="status-top "+(open?"open":"done");
- fOverall.textContent=open?(active?active+" Begegnung(en) aktiv · "+open+" noch nicht beendet":open+" Begegnungen noch offen"):"✓ Freundschaftsspiel vollständig beendet";
+ const leagueText=(fLeague.value==="BZ"||fLeague.value==="BZO")?"4 Doppel":"2 Doppel";
+ fOverall.textContent=(open?(active?active+" Begegnung(en) aktiv · "+open+" noch nicht beendet":open+" Begegnungen noch offen"):"✓ Freundschaftsspiel vollständig beendet")+" · "+fLeague.value+" · "+leagueText;
  renderFriendlyBilling();
 }
 function resetFriendly(){if(!confirm("Freundschaftsspiel wirklich zurücksetzen?"))return;friendly.fixtures=[];persistFriendly();renderFriendly()}
 function saveFriendly(){persistFriendly();friendly.archive.push(JSON.parse(JSON.stringify({meta:friendly.meta,home:friendly.home,guest:friendly.guest,fixtures:friendly.fixtures,saved:new Date().toISOString()})));persistFriendly();alert("✓ Freundschaftsspiel gespeichert.")}
 function friendlyPdfLines(){
- persistFriendly();const m=friendly.meta||{},lines=["DC HUNTERS - FREUNDSCHAFTSSPIEL","Liga: "+m.league+"   Datum: "+new Date((m.date||todayISO())+"T12:00:00").toLocaleDateString("de-DE"),(m.homeTeam||"Heim")+" gegen "+(m.guestTeam||"Gast"),""];
+ persistFriendly();const m=friendly.meta||{},lines=["DC HUNTERS - FREUNDSCHAFTSSPIEL","Liga: "+m.league+" ("+((m.league==="BZ"||m.league==="BZO")?"Doppel 1-4":"Doppel 1-2")+")   Datum: "+new Date((m.date||todayISO())+"T12:00:00").toLocaleDateString("de-DE"),(m.homeTeam||"Heim")+" gegen "+(m.guestTeam||"Gast"),""];
  [1,2,3,4].forEach(r=>{lines.push("RUNDE "+r);friendly.fixtures.filter(x=>x.r===r).forEach(x=>lines.push(x.type+": "+fSideText("h",x.h)+"  "+(x.result||"-")+"  "+fSideText("g",x.g)));lines.push("")});
  let h=0,g=0;friendly.fixtures.forEach(x=>{if(x.result){Number(x.result[0])>Number(x.result[2])?h++:g++}});
  lines.push("GESAMT: "+(m.homeTeam||"Heim")+" "+h+" : "+g+" "+(m.guestTeam||"Gast"));
@@ -710,7 +727,13 @@ if(friendly.meta){
 }else{
  fDate.value=todayISO();
 }
-[fDate,fLeague,fMatchNo,fHomeTeam,fGuestTeam].forEach(x=>x.onchange=persistFriendly);
+[fDate,fMatchNo,fHomeTeam,fGuestTeam].forEach(x=>x.onchange=persistFriendly);
+fLeague.onchange=()=>{
+ if(friendly.fixtures.length){
+   alert("Liga geändert. Bitte den Spielplan neu erstellen, damit die richtige Anzahl Doppel verwendet wird.");
+ }
+ persistFriendly();
+};
 showAppView("training");
 renderAll();
 </script>
