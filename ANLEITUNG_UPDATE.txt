@@ -1,21 +1,11 @@
-DC Hunters v12 – Freundschaftsspiel
+DC Hunters v13 – Fehlerkorrektur
 
-NEU:
-- Eigener Bereich „Freundschaftsspiel“ neben Training.
-- Training bleibt getrennt.
-- Spielplan mit 4 Runden nach dem fotografierten Spielberichtsbogen.
-- A/B/C: die vorgesehenen Doppel 1 und 2.
-- GRAU = noch nicht aktiv.
-- GELB = Begegnung läuft.
-- GRÜN = Begegnung beendet.
-- Höchstens zwei Begegnungen gleichzeitig aktiv.
-- H1-H4 / G1-G4 plus HE1-HE4 / GE1-GE4.
-- Spieler können bei einzelnen Begegnungen ausgewechselt werden.
-- Ergebnisse 2:0, 2:1, 1:2 oder 0:2.
-- Automatische Gesamtwertung.
-- PDF-Spielbericht und Speichern des Freundschaftsspiels.
+BEHOBEN:
+- Trainingsnamen sind wieder sichtbar.
+- Wechsel zwischen „Training“ und „Freundschaftsspiel“ funktioniert.
+- Freundschaftsspiel-Spielerauswahl verursacht keinen JavaScript-Abbruch mehr.
+- Training startet standardmäßig als erster Bereich.
+- Alle bisherigen Trainingsdaten aus v11/v12 bleiben erhalten, da die Trainings-Speicherung nicht zurückgesetzt wird.
 
-INSTALLATION:
-Alle Dateien aus diesem ZIP auf GitHub hochladen und die vorhandenen Dateien ersetzen.
-Commit durchführen und ca. 1 Minute warten.
-Danach muss oben v12 stehen.
+Auf GitHub wieder alle Dateien ersetzen und Commit durchführen.
+Nach ungefähr einer Minute muss oben v13 stehen.

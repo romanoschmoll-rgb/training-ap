@@ -104,7 +104,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 .app-switch{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
 .app-switch button{font-size:16px}
-.app-switch .active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.app-switch .active{background:var(--dark);color:#fff;border-color:var(--dark)}
 .view-hidden{display:none!important}
 .friendly-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .team-card{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fafcfe}
@@ -127,7 +127,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v12</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v13</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -263,7 +263,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </main>
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
-const STORAGE="dc-hunters-v12";
+const STORAGE="dc-hunters-v13";
 let mode="einzel";
 let state=JSON.parse(localStorage.getItem(STORAGE)||"null")||{
  players:[...basePlayers],guests:[],present:Object.fromEntries(basePlayers.map(n=>[n,true])),
@@ -288,9 +288,6 @@ function addGuest(){
  if(allPlayers().some(n=>n.toLowerCase()===name.toLowerCase())){alert("Name bereits vorhanden.");return}
  state.guests.push(name);state.present[name]=true;state.history.pauses[name]=0;input.value="";
  persist();renderAll();
-if(friendly.meta){fDate.value=friendly.meta.date||todayISO();fLeague.value=friendly.meta.league||"A";fMatchNo.value=friendly.meta.no||"";fHomeTeam.value=friendly.meta.homeTeam||"DC Hunters";fGuestTeam.value=friendly.meta.guestTeam||""}else fDate.value=todayISO();
-[fDate,fLeague,fMatchNo,fHomeTeam,fGuestTeam].forEach(x=>x.onchange=persistFriendly);
-renderFriendly();
 }
 function removeGuest(name){
  if(state.rounds.some(r=>r.games.some(g=>g.players.includes(name)))){alert("Gast ist schon in einer Runde. Erst neuen Trainingstag starten.");return}
@@ -484,7 +481,7 @@ function showAppView(v){
  trainingView.classList.toggle("view-hidden",v!=="training");friendlyView.classList.toggle("view-hidden",v!=="friendly");
  trainingViewBtn.classList.toggle("active",v==="training");friendlyViewBtn.classList.toggle("active",v==="friendly");
 }
-const FRIENDLY_KEY="dc-hunters-friendly-v12";
+const FRIENDLY_KEY="dc-hunters-friendly-v13";
 let friendly=JSON.parse(localStorage.getItem(FRIENDLY_KEY)||"null")||{home:["","","","","","","",""],guest:["","","","","","","",""],fixtures:[],archive:[]};
 if(!friendly.archive)friendly.archive=[];
 const fLabelsHome=["H1","H2","H3","H4","HE1","HE2","HE3","HE4"],fLabelsGuest=["G1","G2","G3","G4","GE1","GE2","GE3","GE4"];
@@ -524,24 +521,75 @@ function setFStatus(id,status){
 function setFResult(id,val){const x=friendly.fixtures.find(x=>x.id===id);if(!x)return;x.result=val;if(val)x.status="done";persistFriendly();renderFriendly()}
 function changeFPlayer(id,side,pos,val){const x=friendly.fixtures.find(x=>x.id===id);if(!x)return;x[side][pos]=Number(val);persistFriendly();renderFriendly()}
 function renderFriendly(){
- if(!friendly.fixtures.length){fFixtures.innerHTML='<p class="small">Noch kein Spielplan erstellt.</p>';fOverall.className="status-top done";fOverall.textContent="Noch kein Spielplan erstellt";fHomeGames.textContent=fGuestGames.textContent=fDoneCount.textContent="0";return}
- let html="";
+ if(!friendly.fixtures.length){
+  fFixtures.innerHTML='<p class="small">Noch kein Spielplan erstellt.</p>';
+  fOverall.className="status-top done";
+  fOverall.textContent="Noch kein Spielplan erstellt";
+  fHomeGames.textContent="0";fGuestGames.textContent="0";fDoneCount.textContent="0";
+  return;
+ }
+ fFixtures.innerHTML="";
  [1,2,3,4].forEach(r=>{
-  html+='<div class="round-friendly"><h3>Runde '+r+'</h3>';
+  const round=document.createElement("div");
+  round.className="round-friendly";
+  round.innerHTML="<h3>Runde "+r+"</h3>";
   friendly.fixtures.filter(x=>x.r===r).forEach(x=>{
-   const st=x.status||"planned",label=st==="planned"?"○ nicht aktiv":st==="active"?"● läuft":"✓ beendet";
-   const selectors=(side,arr)=>arr.map((slot,pos)=>'<select onchange="changeFPlayer('+x.id+',\\''+side+'\\','+pos+',this.value)">'+fOptions(side,slot)+'</select>').join("");
-   html+='<div class="fixture '+st+'"><div class="fixture-head"><strong>'+x.type+'</strong><span class="fixture-status '+st+'">'+label+'</span></div>'+
-   '<div class="fixture-match"><div class="side">'+selectors("h",x.h)+'</div><div class="vs">gegen</div><div class="side">'+selectors("g",x.g)+'</div></div>'+
-   '<div class="scorebox"><select onchange="setFResult('+x.id+',this.value)"><option value="">Ergebnis wählen</option>'+["2:0","2:1","1:2","0:2"].map(v=>'<option '+(x.result===v?"selected":"")+'>'+v+'</option>').join("")+'</select>'+
-   '<div class="note">'+(x.result?"Ergebnis: "+x.result:"Noch kein Ergebnis")+'</div></div>'+
-   '<div class="fixture-actions">'+(st!=="active"&&st!=="done"?'<button class="secondary" onclick="setFStatus('+x.id+',\\'active\\')">Spiel aktivieren</button>':'')+
-   (st==="active"?'<button class="light" onclick="setFStatus('+x.id+',\\'planned\\')">Zurück auf nicht aktiv</button>':'')+
-   (st==="done"?'<button class="light" onclick="setFStatus('+x.id+',\\'active\\')">Ergebnis korrigieren</button>':'')+'</div></div>';
-  });html+='</div>';
+   const st=x.status||"planned";
+   const label=st==="planned"?"○ nicht aktiv":st==="active"?"● läuft":"✓ beendet";
+   const fixture=document.createElement("div");
+   fixture.className="fixture "+st;
+
+   const head=document.createElement("div");
+   head.className="fixture-head";
+   head.innerHTML="<strong>"+x.type+"</strong><span class=\"fixture-status "+st+"\">"+label+"</span>";
+   fixture.appendChild(head);
+
+   const match=document.createElement("div");
+   match.className="fixture-match";
+
+   const makeSide=(side,slots)=>{
+    const wrap=document.createElement("div");
+    wrap.className="side";
+    slots.forEach((slot,pos)=>{
+     const s=document.createElement("select");
+     s.innerHTML=fOptions(side,slot);
+     s.value=String(slot);
+     s.onchange=()=>changeFPlayer(x.id,side,pos,s.value);
+     wrap.appendChild(s);
+    });
+    return wrap;
+   };
+
+   match.appendChild(makeSide("h",x.h));
+   const vs=document.createElement("div");vs.className="vs";vs.textContent="gegen";match.appendChild(vs);
+   match.appendChild(makeSide("g",x.g));
+   fixture.appendChild(match);
+
+   const score=document.createElement("div");
+   score.className="scorebox";
+   const resultSelect=document.createElement("select");
+   resultSelect.innerHTML='<option value="">Ergebnis wählen</option><option value="2:0">2:0</option><option value="2:1">2:1</option><option value="1:2">1:2</option><option value="0:2">0:2</option>';
+   resultSelect.value=x.result||"";
+   resultSelect.onchange=()=>setFResult(x.id,resultSelect.value);
+   score.appendChild(resultSelect);
+   const note=document.createElement("div");note.className="note";note.textContent=x.result?"Ergebnis: "+x.result:"Noch kein Ergebnis";score.appendChild(note);
+   fixture.appendChild(score);
+
+   const actions=document.createElement("div");actions.className="fixture-actions";
+   if(st==="planned"){
+    const b=document.createElement("button");b.className="secondary";b.textContent="Spiel aktivieren";b.onclick=()=>setFStatus(x.id,"active");actions.appendChild(b);
+   }else if(st==="active"){
+    const b=document.createElement("button");b.className="light";b.textContent="Zurück auf nicht aktiv";b.onclick=()=>setFStatus(x.id,"planned");actions.appendChild(b);
+   }else{
+    const b=document.createElement("button");b.className="light";b.textContent="Ergebnis korrigieren";b.onclick=()=>setFStatus(x.id,"active");actions.appendChild(b);
+   }
+   fixture.appendChild(actions);
+   round.appendChild(fixture);
+  });
+  fFixtures.appendChild(round);
  });
- fFixtures.innerHTML=html;
- let hg=0,gg=0,done=0;friendly.fixtures.forEach(x=>{if(x.result){done++;const a=Number(x.result[0]),b=Number(x.result[2]);if(a>b)hg++;else gg++}});
+ let hg=0,gg=0,done=0;
+ friendly.fixtures.forEach(x=>{if(x.result){done++;Number(x.result[0])>Number(x.result[2])?hg++:gg++}});
  fHomeGames.textContent=hg;fGuestGames.textContent=gg;fDoneCount.textContent=done;
  const active=fActiveCount(),open=friendly.fixtures.length-done;
  fOverall.className="status-top "+(open?"open":"done");
@@ -561,6 +609,19 @@ function renderAll(){renderPlayers();renderRounds();renderBilling();renderHistor
 
 trainingDate.value=state.activeDate||todayISO();trainingDate.onchange=()=>{state.activeDate=trainingDate.value;persist()};
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+
+renderFriendlyRoster();
+if(friendly.meta){
+ fDate.value=friendly.meta.date||todayISO();
+ fLeague.value=friendly.meta.league||"A";
+ fMatchNo.value=friendly.meta.no||"";
+ fHomeTeam.value=friendly.meta.homeTeam||"DC Hunters";
+ fGuestTeam.value=friendly.meta.guestTeam||"";
+}else{
+ fDate.value=todayISO();
+}
+[fDate,fLeague,fMatchNo,fHomeTeam,fGuestTeam].forEach(x=>x.onchange=persistFriendly);
+showAppView("training");
 renderAll();
 </script>
 </body>
