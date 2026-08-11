@@ -1,11 +1,22 @@
-DC Hunters v13 – Fehlerkorrektur
+DC Hunters v15
 
-BEHOBEN:
-- Trainingsnamen sind wieder sichtbar.
-- Wechsel zwischen „Training“ und „Freundschaftsspiel“ funktioniert.
-- Freundschaftsspiel-Spielerauswahl verursacht keinen JavaScript-Abbruch mehr.
-- Training startet standardmäßig als erster Bereich.
-- Alle bisherigen Trainingsdaten aus v11/v12 bleiben erhalten, da die Trainings-Speicherung nicht zurückgesetzt wird.
+FREUNDSCHAFTSSPIEL:
+- Heimteam fest DC Hunters.
+- H1-H4 und HE1-HE4 aus eurer Trainings-Spielerliste auswählen.
+- Gastspieler G1-G4 und GE1-GE4 manuell eintragen.
+- Liga nur A / B / C.
+- Status grau / gelb / grün.
+- Maximal zwei Begegnungen gleichzeitig aktiv.
+- Spielerwechsel möglich.
+- Automatische Ergebnis- und Gesamtwertung.
 
-Auf GitHub wieder alle Dateien ersetzen und Commit durchführen.
-Nach ungefähr einer Minute muss oben v13 stehen.
+NEU v15 – ABRECHNUNG:
+- 2:0 / 0:2 = jeder beteiligte Spieler 1,00 €.
+- 2:1 / 1:2 = jeder beteiligte Spieler 1,50 €.
+- Im Doppel zahlen alle vier beteiligten Spieler entsprechend.
+- Abrechnung getrennt für DC Hunters und Gastmannschaft.
+- Gesamtsumme wird angezeigt.
+- PDF-Spielbericht enthält die Abrechnung.
+
+Auf GitHub alle enthaltenen Dateien ersetzen.
+Danach muss oben v15 stehen.

@@ -1,7 +1,7 @@
 {
   "name": "DC Hunters",
   "short_name": "DC Hunters",
-  "start_url": "./index.html?v=13",
+  "start_url": "./index.html?v=15",
   "scope": "./",
   "display": "standalone",
   "background_color": "#eef3f7",

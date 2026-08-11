@@ -127,7 +127,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v13</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v15</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -225,7 +225,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </div>
 <div id="friendlyView" class="view-hidden">
 <section class="card">
-<h2>Freundschaftsspiel – A / B / C Liga</h2>
+<h2>Freundschaftsspiel – Liga A / B / C</h2>
 <div class="grid3">
 <label><span class="small">Datum</span><input id="fDate" type="date"></label>
 <label><span class="small">Liga</span><select id="fLeague"><option>A</option><option>B</option><option>C</option></select></label>
@@ -236,10 +236,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <section class="card">
 <h2>1. Mannschaften & Spieler</h2>
 <div class="friendly-grid">
-<div class="team-card"><label><span class="small">Heimteam</span><input id="fHomeTeam" value="DC Hunters"></label><div id="fHomeRoster"></div></div>
+<div class="team-card"><label><span class="small">Heimteam</span><input id="fHomeTeam" value="DC Hunters" readonly></label><div id="fHomeRoster"></div></div>
 <div class="team-card"><label><span class="small">Gastteam</span><input id="fGuestTeam" placeholder="Name Gastmannschaft"></label><div id="fGuestRoster"></div></div>
 </div>
-<p class="small">H1–H4 / G1–G4 sind die Stammpositionen. Ersatzspieler können zusätzlich eingetragen und bei einzelnen Begegnungen ausgewählt werden.</p>
+<p class="small">H1–H4 und HE1–HE4 werden aus eurer DC-Hunters-Spielerliste ausgewählt. G1–G4 und GE1–GE4 werden für die Gastmannschaft manuell eingetragen.</p>
 <div class="actions"><button class="primary" onclick="createFriendly()">Spielplan erstellen</button><button class="danger" onclick="resetFriendly()">Freundschaftsspiel zurücksetzen</button></div>
 </section>
 
@@ -259,11 +259,34 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </div>
 <div class="actions no-print" style="margin-top:12px"><button class="primary" onclick="exportFriendlyPDF()">Spielbericht als PDF</button><button class="secondary" onclick="saveFriendly()">Freundschaftsspiel speichern</button></div>
 </section>
+
+<section class="card">
+<h2>4. Abrechnung Freundschaftsspiel</h2>
+<div class="friendly-grid">
+<div>
+<h3>DC Hunters</h3>
+<table>
+<thead><tr><th>Spieler</th><th>Spiele</th><th class="money">Zu zahlen</th></tr></thead>
+<tbody id="fHomeBilling"></tbody>
+<tfoot><tr><th colspan="2">Summe Heim</th><th id="fHomeTotal" class="money">0,00 €</th></tr></tfoot>
+</table>
+</div>
+<div>
+<h3>Gastmannschaft</h3>
+<table>
+<thead><tr><th>Spieler</th><th>Spiele</th><th class="money">Zu zahlen</th></tr></thead>
+<tbody id="fGuestBilling"></tbody>
+<tfoot><tr><th colspan="2">Summe Gast</th><th id="fGuestTotal" class="money">0,00 €</th></tr></tfoot>
+</table>
+</div>
+</div>
+<div class="summary-box" style="margin-top:12px"><span>Gesamtsumme Freundschaftsspiel</span><strong id="fGrandTotal">0,00 €</strong></div>
+</section>
 </div>
 </main>
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
-const STORAGE="dc-hunters-v13";
+const STORAGE="dc-hunters-v15";
 let mode="einzel";
 let state=JSON.parse(localStorage.getItem(STORAGE)||"null")||{
  players:[...basePlayers],guests:[],present:Object.fromEntries(basePlayers.map(n=>[n,true])),
@@ -481,7 +504,7 @@ function showAppView(v){
  trainingView.classList.toggle("view-hidden",v!=="training");friendlyView.classList.toggle("view-hidden",v!=="friendly");
  trainingViewBtn.classList.toggle("active",v==="training");friendlyViewBtn.classList.toggle("active",v==="friendly");
 }
-const FRIENDLY_KEY="dc-hunters-friendly-v13";
+const FRIENDLY_KEY="dc-hunters-friendly-v15";
 let friendly=JSON.parse(localStorage.getItem(FRIENDLY_KEY)||"null")||{home:["","","","","","","",""],guest:["","","","","","","",""],fixtures:[],archive:[]};
 if(!friendly.archive)friendly.archive=[];
 const fLabelsHome=["H1","H2","H3","H4","HE1","HE2","HE3","HE4"],fLabelsGuest=["G1","G2","G3","G4","GE1","GE2","GE3","GE4"];
@@ -497,17 +520,43 @@ function persistFriendly(){
  friendly.meta={date:fDate?.value||todayISO(),league:fLeague?.value||"A",no:fMatchNo?.value||"",homeTeam:fHomeTeam?.value||"",guestTeam:fGuestTeam?.value||""};
  localStorage.setItem(FRIENDLY_KEY,JSON.stringify(friendly));
 }
+function homePlayerOptions(selected){
+ const options=['<option value="">Spieler auswählen</option>'];
+ allPlayers().forEach(n=>{
+  options.push('<option value="'+n.replace(/"/g,"&quot;")+'" '+(n===selected?"selected":"")+'>'+n+'</option>');
+ });
+ return options.join("");
+}
 function renderFriendlyRoster(){
- fHomeRoster.innerHTML=fLabelsHome.map((x,i)=>'<div class="roster-row"><strong>'+x+'</strong><input id="fh'+i+'" value="'+(friendly.home[i]||'')+'" placeholder="Spieler"></div>').join("");
- fGuestRoster.innerHTML=fLabelsGuest.map((x,i)=>'<div class="roster-row"><strong>'+x+'</strong><input id="fg'+i+'" value="'+(friendly.guest[i]||'')+'" placeholder="Spieler"></div>').join("");
- [...fHomeRoster.querySelectorAll("input"),...fGuestRoster.querySelectorAll("input")].forEach(x=>x.onchange=persistFriendly);
+ fHomeRoster.innerHTML=fLabelsHome.map((x,i)=>
+  '<div class="roster-row"><strong>'+x+'</strong><select id="fh'+i+'">'+homePlayerOptions(friendly.home[i]||"")+'</select></div>'
+ ).join("");
+ fGuestRoster.innerHTML=fLabelsGuest.map((x,i)=>
+  '<div class="roster-row"><strong>'+x+'</strong><input id="fg'+i+'" value="'+(friendly.guest[i]||'')+'" placeholder="Spieler Gast"></div>'
+ ).join("");
+
+ fHomeRoster.querySelectorAll("select").forEach(x=>x.onchange=persistFriendly);
+ fGuestRoster.querySelectorAll("input").forEach(x=>x.onchange=persistFriendly);
 }
 function friendlyNames(side){return side==="h"?friendly.home:friendly.guest}
 function fSideText(side,slots){const names=friendlyNames(side);return slots.map(i=>names[i]||((side==="h"?fLabelsHome:fLabelsGuest)[i])).join(" + ")}
-function fOptions(side,current){const names=friendlyNames(side),labels=side==="h"?fLabelsHome:fLabelsGuest;return names.map((n,i)=>'<option value="'+i+'" '+(String(i)===String(current)?"selected":"")+'>'+(n||labels[i])+' ('+labels[i]+')</option>').join("")}
+function fOptions(side,current){
+ if(side==="h"){
+  const values=friendly.home;
+  const opts=['<option value="">Spieler auswählen</option>'];
+  values.forEach((n,i)=>{
+   if(n)opts.push('<option value="'+i+'" '+(String(i)===String(current)?"selected":"")+'>'+n+' ('+fLabelsHome[i]+')</option>');
+  });
+  return opts.join("");
+ }
+ const names=friendly.guest;
+ return names.map((n,i)=>'<option value="'+i+'" '+(String(i)===String(current)?"selected":"")+'>'+(n||fLabelsGuest[i])+' ('+fLabelsGuest[i]+')</option>').join("");
+}
 function createFriendly(){
  persistFriendly();
  if(!friendly.home.slice(0,4).every(Boolean)||!friendly.guest.slice(0,4).every(Boolean)){alert("Bitte mindestens H1–H4 und G1–G4 eintragen.");return}
+ const homeMain=friendly.home.slice(0,4);
+ if(new Set(homeMain).size!==homeMain.length){alert("Bei H1–H4 darf kein Spieler doppelt ausgewählt werden.");return}
  friendly.fixtures=fSchedule.map((x,i)=>({id:Date.now()+i,r:x.r,type:x.type,h:[...x.h],g:[...x.g],status:"planned",result:""}));
  persistFriendly();renderFriendly();
 }
@@ -520,12 +569,43 @@ function setFStatus(id,status){
 }
 function setFResult(id,val){const x=friendly.fixtures.find(x=>x.id===id);if(!x)return;x.result=val;if(val)x.status="done";persistFriendly();renderFriendly()}
 function changeFPlayer(id,side,pos,val){const x=friendly.fixtures.find(x=>x.id===id);if(!x)return;x[side][pos]=Number(val);persistFriendly();renderFriendly()}
+
+function calculateFriendlyBilling(){
+ const home={},guest={};
+ const add=(obj,name,cost)=>{if(!name)return;if(!obj[name])obj[name]={games:0,cost:0};obj[name].games++;obj[name].cost+=cost};
+ friendly.fixtures.forEach(x=>{
+  if(!x.result)return;
+  const cost=(x.result==="2:0"||x.result==="0:2")?1.0:1.5;
+  x.h.forEach(i=>add(home,friendly.home[i]||fLabelsHome[i],cost));
+  x.g.forEach(i=>add(guest,friendly.guest[i]||fLabelsGuest[i],cost));
+ });
+ return{home,guest};
+}
+function renderFriendlyBilling(){
+ const b=calculateFriendlyBilling();
+ const render=(obj,tbody,totalEl)=>{
+  tbody.innerHTML="";
+  let total=0;
+  Object.entries(obj).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([name,x])=>{
+   total+=x.cost;
+   const tr=document.createElement("tr");
+   tr.innerHTML="<td>"+name+"</td><td>"+x.games+"</td><td class='money'><b>"+euro(x.cost)+"</b></td>";
+   tbody.appendChild(tr);
+  });
+  totalEl.textContent=euro(total);
+  return total;
+ };
+ const ht=render(b.home,fHomeBilling,fHomeTotal);
+ const gt=render(b.guest,fGuestBilling,fGuestTotal);
+ fGrandTotal.textContent=euro(ht+gt);
+}
 function renderFriendly(){
  if(!friendly.fixtures.length){
   fFixtures.innerHTML='<p class="small">Noch kein Spielplan erstellt.</p>';
   fOverall.className="status-top done";
   fOverall.textContent="Noch kein Spielplan erstellt";
   fHomeGames.textContent="0";fGuestGames.textContent="0";fDoneCount.textContent="0";
+  renderFriendlyBilling();
   return;
  }
  fFixtures.innerHTML="";
@@ -594,6 +674,7 @@ function renderFriendly(){
  const active=fActiveCount(),open=friendly.fixtures.length-done;
  fOverall.className="status-top "+(open?"open":"done");
  fOverall.textContent=open?(active?active+" Begegnung(en) aktiv · "+open+" noch nicht beendet":open+" Begegnungen noch offen"):"✓ Freundschaftsspiel vollständig beendet";
+ renderFriendlyBilling();
 }
 function resetFriendly(){if(!confirm("Freundschaftsspiel wirklich zurücksetzen?"))return;friendly.fixtures=[];persistFriendly();renderFriendly()}
 function saveFriendly(){persistFriendly();friendly.archive.push(JSON.parse(JSON.stringify({meta:friendly.meta,home:friendly.home,guest:friendly.guest,fixtures:friendly.fixtures,saved:new Date().toISOString()})));persistFriendly();alert("✓ Freundschaftsspiel gespeichert.")}
@@ -601,7 +682,16 @@ function friendlyPdfLines(){
  persistFriendly();const m=friendly.meta||{},lines=["DC HUNTERS - FREUNDSCHAFTSSPIEL","Liga: "+m.league+"   Datum: "+new Date((m.date||todayISO())+"T12:00:00").toLocaleDateString("de-DE"),(m.homeTeam||"Heim")+" gegen "+(m.guestTeam||"Gast"),""];
  [1,2,3,4].forEach(r=>{lines.push("RUNDE "+r);friendly.fixtures.filter(x=>x.r===r).forEach(x=>lines.push(x.type+": "+fSideText("h",x.h)+"  "+(x.result||"-")+"  "+fSideText("g",x.g)));lines.push("")});
  let h=0,g=0;friendly.fixtures.forEach(x=>{if(x.result){Number(x.result[0])>Number(x.result[2])?h++:g++}});
- lines.push("GESAMT: "+(m.homeTeam||"Heim")+" "+h+" : "+g+" "+(m.guestTeam||"Gast"));return lines;
+ lines.push("GESAMT: "+(m.homeTeam||"Heim")+" "+h+" : "+g+" "+(m.guestTeam||"Gast"));
+ lines.push("","ABRECHNUNG");
+ const b=calculateFriendlyBilling();
+ let sum=0;
+ lines.push("DC Hunters:");
+ Object.entries(b.home).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([n,x])=>{lines.push("  "+n+" | Spiele "+x.games+" | "+euro(x.cost));sum+=x.cost});
+ lines.push("Gastmannschaft:");
+ Object.entries(b.guest).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([n,x])=>{lines.push("  "+n+" | Spiele "+x.games+" | "+euro(x.cost));sum+=x.cost});
+ lines.push("Gesamtsumme: "+euro(sum));
+ return lines;
 }
 function exportFriendlyPDF(){if(!friendly.fixtures.length){alert("Bitte zuerst einen Spielplan erstellen.");return}createSimplePDF(friendlyPdfLines(),"DC_Hunters_Freundschaft_"+(fDate.value||todayISO())+".pdf")}
 
