@@ -1,14 +1,26 @@
-DC Hunters v18 – PDF-Reparatur
+DC Hunters v19 – Speichern + PDF repariert
 
-PDF komplett neu aufgebaut:
-- gültige PDF-Struktur mit bytegenauen Referenzen
-- iPhone / iPad: native Teilen-Funktion; „In Dateien sichern“ oder PDF-App auswählen
-- Android: native Teilen-Funktion; Dateien, Drive oder PDF-App auswählen
-- Windows / Edge: normale PDF wird heruntergeladen
-- gilt für Training, archivierte Trainingstage und Freundschaftsspiele
+WARUM TRAININGSTAGE VERSCHWANDEN:
+Die vorherigen Versionen hatten bei jedem Update einen neuen internen Speichernamen.
+v19 verwendet ab jetzt dauerhaft:
+  dc-hunters-data
+Dieser Name wird bei zukünftigen Updates NICHT mehr geändert.
+Beim ersten Start versucht v19 automatisch die neuesten vorhandenen Daten aus v10-v18 zu übernehmen.
 
-Die Funktion mit zwei Trainingsrunden und „Als Nächstes“ bleibt erhalten.
-Die Doppel im Freundschaftsspiel bleiben zuerst.
+TRAINING SPEICHERN:
+- „Trainingstag speichern“ legt den Tag im festen Gerätespeicher ab.
+- Danach prüft die App sofort, ob der Eintrag wirklich im Speicher vorhanden ist.
+- Im Archiv steht sichtbar „✓ gespeichert“.
+- Gespeicherte Tage können geöffnet, als PDF geöffnet oder gelöscht werden.
 
-Auf GitHub wieder alle enthaltenen Dateien ersetzen.
-Danach muss oben v18 stehen.
+PDF:
+- PDF wird zuerst im PDF-Viewer geöffnet.
+- iPhone/iPad: Teilen → „In Dateien sichern“.
+- Android: Menü/Teilen → Dateien, Drive oder PDF-App.
+- Windows/Edge: im geöffneten PDF-Viewer herunterladen/speichern.
+- Gilt für Training, Archiv und Freundschaftsspiel.
+
+WICHTIG:
+Die Daten bleiben weiterhin lokal auf dem jeweiligen Gerät. Tablet und Handy synchronisieren sich nicht automatisch.
+
+Auf GitHub alle Dateien ersetzen. Danach muss oben v19 stehen.

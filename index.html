@@ -132,7 +132,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v18</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v19</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -262,7 +262,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="summary-box"><span>Gast – Spiele</span><strong id="fGuestGames">0</strong></div>
 <div class="summary-box"><span>Beendete Begegnungen</span><strong id="fDoneCount">0</strong></div>
 </div>
-<div class="actions no-print" style="margin-top:12px"><button class="primary" onclick="exportFriendlyPDF()">Spielbericht als PDF</button><button class="secondary" onclick="saveFriendly()">Freundschaftsspiel speichern</button></div>
+<div class="actions no-print" style="margin-top:12px"><button class="primary" onclick="exportFriendlyPDF()">Spielbericht PDF öffnen</button><button class="secondary" onclick="saveFriendly()">Freundschaftsspiel speichern</button></div>
 </section>
 
 <section class="card">
@@ -291,19 +291,55 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </main>
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
-const STORAGE="dc-hunters-v18";
+const STORAGE="dc-hunters-data";
+const LEGACY_KEYS=["dc-hunters-v19","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
 let mode="einzel";
-let state=JSON.parse(localStorage.getItem(STORAGE)||"null")||{
- players:[...basePlayers],guests:[],present:Object.fromEntries(basePlayers.map(n=>[n,true])),
- rounds:[],history:{opponents:{},pauses:{}},archive:[]
-};
+
+function loadMainState(){
+ let saved=null;
+ try{saved=JSON.parse(localStorage.getItem(STORAGE)||"null")}catch(e){}
+ if(saved)return saved;
+
+ // Beim ersten Start nach diesem Update die neuesten vorhandenen Altdaten übernehmen.
+ for(const key of LEGACY_KEYS){
+   try{
+     const old=JSON.parse(localStorage.getItem(key)||"null");
+     if(old){
+       try{localStorage.setItem(STORAGE,JSON.stringify(old))}catch(e){}
+       return old;
+     }
+   }catch(e){}
+ }
+ return{
+   players:[...basePlayers],
+   guests:[],
+   present:Object.fromEntries(basePlayers.map(n=>[n,true])),
+   rounds:[],
+   history:{opponents:{},pauses:{}},
+   archive:[],
+   activeDate:null
+ };
+}
+let state=loadMainState();
 if(!state.archive)state.archive=[];
 if(!state.history)state.history={opponents:{},pauses:{}};
+if(!state.players)state.players=[...basePlayers];
+if(!state.guests)state.guests=[];
+if(!state.present)state.present=Object.fromEntries(allPlayers().map(n=>[n,true]));
 
 function allPlayers(){return [...state.players,...state.guests]}
 function todayISO(){return new Date().toISOString().slice(0,10)}
 function euro(v){return Number(v||0).toLocaleString("de-DE",{style:"currency",currency:"EUR"})}
-function persist(){localStorage.setItem(STORAGE,JSON.stringify(state))}
+function persist(){
+ state.activeDate=(typeof trainingDate!=="undefined"&&trainingDate.value)?trainingDate.value:(state.activeDate||todayISO());
+ try{
+   localStorage.setItem(STORAGE,JSON.stringify(state));
+   return true;
+ }catch(e){
+   alert("Speichern auf diesem Gerät ist fehlgeschlagen. Bitte prüfe, ob der Browser private Daten blockiert oder der Speicher voll ist.");
+   return false;
+ }
+}
 function pairKey(a,b){return [a,b].sort().join("|")}
 function opponentCount(a,b){return state.history.opponents[pairKey(a,b)]||0}
 function addOpponent(a,b){const k=pairKey(a,b);state.history.opponents[k]=(state.history.opponents[k]||0)+1}
@@ -481,15 +517,41 @@ function snapshot(){
 }
 function archiveDay(){
  if(!state.rounds.length){alert("Noch keine Runden vorhanden.");return}
- if(unfinishedRounds().length&&!confirm("Es sind noch Spiele offen oder vorausgelost. Trainingstag trotzdem speichern?"))return
- const snap=snapshot(),same=state.archive.findIndex(x=>x.date===snap.date);
- if(same>=0&&!confirm("Für dieses Datum existiert bereits ein Eintrag. Ersetzen?"))return;
+ if(unfinishedRounds().length&&!confirm("Es sind noch Spiele offen oder vorausgelost. Trainingstag trotzdem speichern?"))return;
+
+ const snap=snapshot();
+ const same=state.archive.findIndex(x=>x.date===snap.date);
+ if(same>=0&&!confirm("Für dieses Datum existiert bereits ein gespeicherter Trainingstag. Ersetzen?"))return;
  if(same>=0)state.archive.splice(same,1);
- state.archive.unshift(snap);persist();renderHistory();renderLongTermRanking();alert("✓ Trainingstag wurde gespeichert.");
+
+ state.archive.unshift(snap);
+ if(!persist())return;
+
+ // Sofort aus dem echten Gerätespeicher zurücklesen und prüfen.
+ try{
+   const verify=JSON.parse(localStorage.getItem(STORAGE)||"null");
+   if(!verify || !Array.isArray(verify.archive) || !verify.archive.some(x=>x.date===snap.date)){
+     alert("Der Trainingstag konnte nicht dauerhaft gespeichert werden.");
+     return;
+   }
+ }catch(e){
+   alert("Der Trainingstag konnte nicht überprüft werden.");
+   return;
+ }
+
+ renderHistory();
+ renderLongTermRanking();
+ alert("✓ Trainingstag "+new Date(snap.date+"T12:00:00").toLocaleDateString("de-DE")+" wurde dauerhaft auf diesem Gerät gespeichert.");
 }
 function renderHistory(){
- archiveCount.textContent=state.archive.length;history.innerHTML=state.archive.length?"":'<p class="small">Noch keine Trainingstage gespeichert.</p>';
- state.archive.forEach((x,i)=>{const d=document.createElement("div");d.className="history-item";d.innerHTML='<div class="history-head"><div><strong>'+new Date(x.date+"T12:00:00").toLocaleDateString("de-DE")+'</strong><div class="small">'+x.completed+' Partien · '+euro(x.total)+'</div></div><div><button class="light" onclick="loadArchive('+i+')">Ansehen</button> <button class="danger" onclick="deleteArchive('+i+')">Löschen</button></div></div>';history.appendChild(d)});
+ archiveCount.textContent=state.archive.length;
+ history.innerHTML=state.archive.length?"":'<p class="small">Noch keine Trainingstage gespeichert.</p>';
+ state.archive.forEach((x,i)=>{
+   const d=document.createElement("div");
+   d.className="history-item";
+   d.innerHTML='<div class="history-head"><div><strong>'+new Date(x.date+"T12:00:00").toLocaleDateString("de-DE")+'</strong><div class="small">✓ gespeichert · '+x.completed+' Partien · '+euro(x.total)+'</div></div><div><button class="light" onclick="loadArchive('+i+')">Öffnen</button> <button class="secondary" onclick="exportArchivePDF('+i+')">PDF öffnen</button> <button class="danger" onclick="deleteArchive('+i+')">Löschen</button></div></div>';
+   history.appendChild(d);
+ });
 }
 function loadArchive(i){
  const x=state.archive[i];if(!x)return;if(!confirm("Aktuellen Trainingstag durch diesen gespeicherten Stand ersetzen?"))return;
@@ -609,45 +671,31 @@ async function createSimplePDF(lines,filename){
  pushString(xref);
 
  const blob=new Blob(chunks,{type:"application/pdf"});
- const file=new File([blob],filename,{type:"application/pdf"});
-
- // Mobile: native share sheet is the most reliable way to save/open.
- try{
-   if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
-     await navigator.share({
-       files:[file],
-       title:"DC Hunters PDF",
-       text:"DC Hunters Spielbericht"
-     });
-     return;
-   }
- }catch(err){
-   if(err && err.name==="AbortError")return;
- }
-
- // Fallback for browsers without file sharing.
  const url=URL.createObjectURL(blob);
+
+ // PDF zuerst im Browser/PDF-Viewer öffnen. Das ist auf iPhone, iPad,
+ // Android und Windows deutlich zuverlässiger als ein erzwungener Dateidownload.
+ const a=document.createElement("a");
+ a.href=url;
+ a.target="_blank";
+ a.rel="noopener";
+ a.style.display="none";
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+
  const isApple=/iPad|iPhone|iPod/.test(navigator.userAgent) ||
-   (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+   (navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+ const isAndroid=/Android/i.test(navigator.userAgent);
 
  if(isApple){
-   const w=window.open(url,"_blank");
-   if(w){
-     alert("Die PDF wurde geöffnet. Über Teilen kannst du sie in „Dateien“ sichern oder in einer PDF-App öffnen.");
-   }else{
-     alert("Safari blockiert das PDF-Fenster. Bitte Pop-ups für diese Seite erlauben und erneut versuchen.");
-   }
-   setTimeout(()=>URL.revokeObjectURL(url),120000);
- }else{
-   const a=document.createElement("a");
-   a.href=url;
-   a.download=filename;
-   a.rel="noopener";
-   document.body.appendChild(a);
-   a.click();
-   a.remove();
-   setTimeout(()=>URL.revokeObjectURL(url),10000);
+   setTimeout(()=>alert("PDF geöffnet. Dort auf Teilen tippen → „In Dateien sichern“ oder eine PDF-App auswählen."),350);
+ }else if(isAndroid){
+   setTimeout(()=>alert("PDF geöffnet. Im PDF-Viewer über Teilen oder Menü kannst du sie in Dateien, Drive oder einer PDF-App speichern."),350);
  }
+
+ // Blob-URL lange genug behalten, damit mobile PDF-Viewer sie sicher laden können.
+ setTimeout(()=>URL.revokeObjectURL(url),300000);
 }
 async function exportCurrentPDF(){const snap=snapshot();await createSimplePDF(pdfLinesFromSnapshot(snap),"DC_Hunters_"+snap.date+".pdf")}
 async function exportArchivePDF(i){const snap=state.archive[i];if(snap)await createSimplePDF(pdfLinesFromSnapshot(snap),"DC_Hunters_"+snap.date+".pdf")}
@@ -660,7 +708,7 @@ function showAppView(v){
  trainingView.classList.toggle("view-hidden",v!=="training");friendlyView.classList.toggle("view-hidden",v!=="friendly");
  trainingViewBtn.classList.toggle("active",v==="training");friendlyViewBtn.classList.toggle("active",v==="friendly");
 }
-const FRIENDLY_KEY="dc-hunters-friendly-v18";
+const FRIENDLY_KEY="dc-hunters-friendly-data";
 let friendly=JSON.parse(localStorage.getItem(FRIENDLY_KEY)||"null")||{home:["","","","","","","",""],guest:["","","","","","","",""],fixtures:[],archive:[]};
 if(!friendly.archive)friendly.archive=[];
 const fLabelsHome=["H1","H2","H3","H4","HE1","HE2","HE3","HE4"],fLabelsGuest=["G1","G2","G3","G4","GE1","GE2","GE3","GE4"];
