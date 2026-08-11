@@ -132,7 +132,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v19</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v20</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -287,12 +287,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </div>
 <div class="summary-box" style="margin-top:12px"><span>Gesamtsumme Freundschaftsspiel</span><strong id="fGrandTotal">0,00 €</strong></div>
 </section>
+<section class="card">
+<h2>5. Gespeicherte Freundschaftsspiele</h2>
+<div id="fArchive"></div>
+</section>
 </div>
 </main>
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
 const STORAGE="dc-hunters-data";
-const LEGACY_KEYS=["dc-hunters-v19","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
+const LEGACY_KEYS=["dc-hunters-v20","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
 let mode="einzel";
 
 function loadMainState(){
@@ -549,13 +553,41 @@ function renderHistory(){
  state.archive.forEach((x,i)=>{
    const d=document.createElement("div");
    d.className="history-item";
-   d.innerHTML='<div class="history-head"><div><strong>'+new Date(x.date+"T12:00:00").toLocaleDateString("de-DE")+'</strong><div class="small">✓ gespeichert · '+x.completed+' Partien · '+euro(x.total)+'</div></div><div><button class="light" onclick="loadArchive('+i+')">Öffnen</button> <button class="secondary" onclick="exportArchivePDF('+i+')">PDF öffnen</button> <button class="danger" onclick="deleteArchive('+i+')">Löschen</button></div></div>';
+   d.innerHTML='<div class="history-head"><div><strong>'+
+     new Date(x.date+"T12:00:00").toLocaleDateString("de-DE")+
+     '</strong><div class="small">✓ gespeichert · '+x.completed+' Partien · '+euro(x.total)+'</div></div><div>'+
+     '<button class="light" onclick="loadArchive('+i+')">Öffnen</button> '+
+     '<button class="secondary" onclick="exportArchivePDF('+i+')">PDF öffnen</button> '+
+     '<button class="danger" onclick="deleteArchive('+i+')">Löschen</button>'+
+     '</div></div>';
    history.appendChild(d);
  });
 }
 function loadArchive(i){
- const x=state.archive[i];if(!x)return;if(!confirm("Aktuellen Trainingstag durch diesen gespeicherten Stand ersetzen?"))return;
- state.rounds=JSON.parse(JSON.stringify(x.rounds));trainingDate.value=x.date;rebuildHistory();persist();renderAll();
+ const x=state.archive[i];
+ if(!x){alert("Gespeicherter Trainingstag wurde nicht gefunden.");return;}
+ if(!confirm("Diesen gespeicherten Trainingstag öffnen?"))return;
+
+ state.rounds=JSON.parse(JSON.stringify(x.rounds||[]));
+ state.activeDate=x.date||todayISO();
+ trainingDate.value=state.activeDate;
+
+ const names=new Set();
+ Object.keys(x.stats||{}).forEach(n=>names.add(n));
+ (x.rounds||[]).forEach(r=>{
+   (r.games||[]).forEach(g=>(g.players||[]).forEach(n=>names.add(n)));
+   (r.pauses||[]).forEach(n=>names.add(n));
+ });
+ names.forEach(n=>{
+   if(!state.players.includes(n)&&!state.guests.includes(n))state.guests.push(n);
+   if(!(n in state.present))state.present[n]=true;
+ });
+
+ rebuildHistory();
+ persist();
+ renderAll();
+ window.scrollTo({top:0,behavior:"smooth"});
+ alert("✓ Gespeicherter Trainingstag wurde geöffnet.");
 }
 function deleteArchive(i){if(confirm("Gespeicherten Trainingstag löschen?")){state.archive.splice(i,1);persist();renderHistory();renderLongTermRanking()}}
 function renderLongTermRanking(){
@@ -845,7 +877,103 @@ function renderFriendly(){
  renderFriendlyBilling();
 }
 function resetFriendly(){if(!confirm("Freundschaftsspiel wirklich zurücksetzen?"))return;friendly.fixtures=[];persistFriendly();renderFriendly()}
-function saveFriendly(){persistFriendly();friendly.archive.push(JSON.parse(JSON.stringify({meta:friendly.meta,home:friendly.home,guest:friendly.guest,fixtures:friendly.fixtures,saved:new Date().toISOString()})));persistFriendly();alert("✓ Freundschaftsspiel gespeichert.")}
+function saveFriendly(){
+ persistFriendly();
+ if(!friendly.fixtures.length){alert("Noch kein Freundschaftsspiel vorhanden.");return;}
+ const entry={
+   id:Date.now(),
+   meta:JSON.parse(JSON.stringify(friendly.meta||{})),
+   home:JSON.parse(JSON.stringify(friendly.home||[])),
+   guest:JSON.parse(JSON.stringify(friendly.guest||[])),
+   fixtures:JSON.parse(JSON.stringify(friendly.fixtures||[])),
+   saved:new Date().toISOString()
+ };
+ const same=friendly.archive.findIndex(x=>
+   x.meta&&x.meta.date===entry.meta.date&&
+   x.meta.guestTeam===entry.meta.guestTeam&&
+   x.meta.league===entry.meta.league
+ );
+ if(same>=0&&!confirm("Dieses Freundschaftsspiel ist bereits gespeichert. Ersetzen?"))return;
+ if(same>=0)friendly.archive.splice(same,1);
+ friendly.archive.unshift(entry);
+ persistFriendly();
+ renderFriendlyArchive();
+ alert("✓ Freundschaftsspiel wurde gespeichert.");
+}
+
+function renderFriendlyArchive(){
+ if(typeof fArchive==="undefined"||!fArchive)return;
+ fArchive.innerHTML="";
+ if(!friendly.archive.length){
+   fArchive.innerHTML='<p class="small">Noch keine Freundschaftsspiele gespeichert.</p>';
+   return;
+ }
+ friendly.archive.forEach((x,i)=>{
+   const m=x.meta||{};
+   let hg=0,gg=0;
+   (x.fixtures||[]).forEach(f=>{if(f.result){Number(f.result[0])>Number(f.result[2])?hg++:gg++}});
+   const d=document.createElement("div");
+   d.className="history-item";
+   d.innerHTML='<div class="history-head"><div><strong>'+
+     new Date((m.date||todayISO())+"T12:00:00").toLocaleDateString("de-DE")+
+     ' · '+(m.guestTeam||"Gastmannschaft")+
+     '</strong><div class="small">Liga '+(m.league||"-")+' · Ergebnis '+hg+':'+gg+' · ✓ gespeichert</div></div><div>'+
+     '<button class="light" onclick="loadFriendlyArchive('+i+')">Öffnen</button> '+
+     '<button class="secondary" onclick="exportFriendlyArchivePDF('+i+')">PDF öffnen</button> '+
+     '<button class="danger" onclick="deleteFriendlyArchive('+i+')">Löschen</button>'+
+     '</div></div>';
+   fArchive.appendChild(d);
+ });
+}
+function loadFriendlyArchive(i){
+ const x=friendly.archive[i];
+ if(!x){alert("Gespeichertes Freundschaftsspiel wurde nicht gefunden.");return;}
+ if(!confirm("Dieses gespeicherte Freundschaftsspiel öffnen?"))return;
+
+ friendly.meta=JSON.parse(JSON.stringify(x.meta||{}));
+ friendly.home=JSON.parse(JSON.stringify(x.home||[]));
+ friendly.guest=JSON.parse(JSON.stringify(x.guest||[]));
+ friendly.fixtures=JSON.parse(JSON.stringify(x.fixtures||[]));
+ persistFriendly();
+
+ renderFriendlyRoster();
+ fDate.value=friendly.meta.date||todayISO();
+ fLeague.value=friendly.meta.league||"A";
+ fMatchNo.value=friendly.meta.no||"";
+ fHomeTeam.value=friendly.meta.homeTeam||"DC Hunters";
+ fGuestTeam.value=friendly.meta.guestTeam||"";
+
+ showAppView("friendly");
+ renderFriendly();
+ renderFriendlyArchive();
+ window.scrollTo({top:0,behavior:"smooth"});
+ alert("✓ Freundschaftsspiel wurde geöffnet.");
+}
+function deleteFriendlyArchive(i){
+ if(!confirm("Gespeichertes Freundschaftsspiel löschen?"))return;
+ friendly.archive.splice(i,1);
+ persistFriendly();
+ renderFriendlyArchive();
+}
+async function exportFriendlyArchivePDF(i){
+ const x=friendly.archive[i];
+ if(!x)return;
+ const backup={
+   meta:JSON.parse(JSON.stringify(friendly.meta||{})),
+   home:JSON.parse(JSON.stringify(friendly.home||[])),
+   guest:JSON.parse(JSON.stringify(friendly.guest||[])),
+   fixtures:JSON.parse(JSON.stringify(friendly.fixtures||[]))
+ };
+ friendly.meta=JSON.parse(JSON.stringify(x.meta||{}));
+ friendly.home=JSON.parse(JSON.stringify(x.home||[]));
+ friendly.guest=JSON.parse(JSON.stringify(x.guest||[]));
+ friendly.fixtures=JSON.parse(JSON.stringify(x.fixtures||[]));
+ await createSimplePDF(friendlyPdfLines(),"DC_Hunters_Freundschaft_"+(friendly.meta.date||todayISO())+".pdf");
+ friendly.meta=backup.meta;
+ friendly.home=backup.home;
+ friendly.guest=backup.guest;
+ friendly.fixtures=backup.fixtures;
+}
 function friendlyPdfLines(){
  persistFriendly();const m=friendly.meta||{},lines=["DC HUNTERS - FREUNDSCHAFTSSPIEL","Liga: "+m.league+" ("+((m.league==="BZ"||m.league==="BZO")?"Doppel 1-4":"Doppel 1-2")+")   Datum: "+new Date((m.date||todayISO())+"T12:00:00").toLocaleDateString("de-DE"),(m.homeTeam||"Heim")+" gegen "+(m.guestTeam||"Gast"),""];
  [1,2,3,4].forEach(r=>{lines.push("RUNDE "+r);friendly.fixtures.filter(x=>x.r===r).forEach(x=>lines.push(x.type+": "+fSideText("h",x.h)+"  "+(x.result||"-")+"  "+fSideText("g",x.g)));lines.push("")});
@@ -863,7 +991,7 @@ function friendlyPdfLines(){
 }
 async function exportFriendlyPDF(){if(!friendly.fixtures.length){alert("Bitte zuerst einen Spielplan erstellen.");return}await createSimplePDF(friendlyPdfLines(),"DC_Hunters_Freundschaft_"+(fDate.value||todayISO())+".pdf")}
 
-function renderAll(){renderPlayers();renderRounds();renderBilling();renderHistory();renderLongTermRanking();renderFriendlyRoster();renderFriendly()}
+function renderAll(){renderPlayers();renderRounds();renderBilling();renderHistory();renderLongTermRanking();renderFriendlyRoster();renderFriendly();renderFriendlyArchive()}
 
 trainingDate.value=state.activeDate||todayISO();trainingDate.onchange=()=>{state.activeDate=trainingDate.value;persist()};
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");

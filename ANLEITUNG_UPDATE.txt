@@ -1,26 +1,15 @@
-DC Hunters v19 – Speichern + PDF repariert
+DC Hunters v20 – Archive repariert
 
-WARUM TRAININGSTAGE VERSCHWANDEN:
-Die vorherigen Versionen hatten bei jedem Update einen neuen internen Speichernamen.
-v19 verwendet ab jetzt dauerhaft:
-  dc-hunters-data
-Dieser Name wird bei zukünftigen Updates NICHT mehr geändert.
-Beim ersten Start versucht v19 automatisch die neuesten vorhandenen Daten aus v10-v18 zu übernehmen.
+TRAINING:
+- „Trainingstag speichern“ legt den Tag im Archiv ab.
+- Im Bereich „Gespeicherte Trainingstage“ gibt es Öffnen / PDF öffnen / Löschen.
+- „Öffnen“ stellt Datum, Runden, Ergebnisse, Pausen und beteiligte Spieler wieder her.
 
-TRAINING SPEICHERN:
-- „Trainingstag speichern“ legt den Tag im festen Gerätespeicher ab.
-- Danach prüft die App sofort, ob der Eintrag wirklich im Speicher vorhanden ist.
-- Im Archiv steht sichtbar „✓ gespeichert“.
-- Gespeicherte Tage können geöffnet, als PDF geöffnet oder gelöscht werden.
+FREUNDSCHAFTSSPIEL:
+- Neuer sichtbarer Bereich „Gespeicherte Freundschaftsspiele“.
+- Anzeige: Datum, Gegner, Liga, Ergebnis.
+- Öffnen / PDF öffnen / Löschen.
+- Beim Öffnen werden Spieler, Auswechslungen und Ergebnisse wiederhergestellt.
 
-PDF:
-- PDF wird zuerst im PDF-Viewer geöffnet.
-- iPhone/iPad: Teilen → „In Dateien sichern“.
-- Android: Menü/Teilen → Dateien, Drive oder PDF-App.
-- Windows/Edge: im geöffneten PDF-Viewer herunterladen/speichern.
-- Gilt für Training, Archiv und Freundschaftsspiel.
-
-WICHTIG:
-Die Daten bleiben weiterhin lokal auf dem jeweiligen Gerät. Tablet und Handy synchronisieren sich nicht automatisch.
-
-Auf GitHub alle Dateien ersetzen. Danach muss oben v19 stehen.
+Die Daten bleiben lokal auf dem jeweiligen Gerät.
+Auf GitHub alle Dateien ersetzen. Danach muss oben v20 stehen.
