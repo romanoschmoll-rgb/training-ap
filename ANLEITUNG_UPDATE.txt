@@ -1,23 +1,14 @@
-DC Hunters v17
+DC Hunters v18 – PDF-Reparatur
 
-TRAINING
-- Zwei offene Runden können gleichzeitig vorbereitet sein.
-- Erste offene Runde = Aktuelle Runde (gelb).
-- Zweite offene Runde = Als Nächstes (blau).
-- Die nächste Paarung ist früh sichtbar, damit sich Spieler bereithalten können.
-- In der nächsten Runde können noch keine Ergebnisse eingetragen werden.
-- Sobald die aktuelle Runde beendet ist, wird „Als Nächstes“ automatisch zur aktuellen Runde.
-- Danach kann wieder eine weitere Runde vorausgelost werden.
+PDF komplett neu aufgebaut:
+- gültige PDF-Struktur mit bytegenauen Referenzen
+- iPhone / iPad: native Teilen-Funktion; „In Dateien sichern“ oder PDF-App auswählen
+- Android: native Teilen-Funktion; Dateien, Drive oder PDF-App auswählen
+- Windows / Edge: normale PDF wird heruntergeladen
+- gilt für Training, archivierte Trainingstage und Freundschaftsspiele
 
-FREUNDSCHAFTSSPIEL
-- Alle Doppel stehen zuerst.
-- A/B/C: Doppel 1–2.
-- BZ/BZO: Doppel 1–4.
-- Danach folgen die Einzel.
+Die Funktion mit zwei Trainingsrunden und „Als Nächstes“ bleibt erhalten.
+Die Doppel im Freundschaftsspiel bleiben zuerst.
 
-PDF
-- iPad/iPhone: Teilen → In Dateien sichern.
-- Falls die Teilen-Funktion nicht direkt erscheint, öffnet sich die PDF in Safari.
-- Windows: normale PDF-Datei wird heruntergeladen.
-
-Alle Dateien auf GitHub ersetzen. Danach muss oben v17 stehen.
+Auf GitHub wieder alle enthaltenen Dateien ersetzen.
+Danach muss oben v18 stehen.
