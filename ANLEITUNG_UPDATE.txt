@@ -1,17 +1,12 @@
-UPDATE v10
-Alle Dateien auf GitHub ersetzen. Danach etwa 1 Minute warten und prüfen, ob oben v10 steht.
+UPDATE v11
+- offene Spiele gelb
+- beendete Spiele grün
+- Gewinner grün, Verlierer rot
+- Rundenstatus sichtbar
+- neue Runde erst nach Abschluss der aktuellen
+- direkte PDF-Datei
+- Trainingstage zuverlässiger speichern
+- gespeicherte Trainingstage ebenfalls als PDF
+- v10-Daten werden übernommen
 
-Neu:
-- helles DC-Hunters-Design
-- Datum des Trainingstags
-- Tagesrangliste
-- Spiele, Siege, Niederlagen, Legs, Siegquote, Pausen
-- Trainingstage speichern und wieder laden
-- Monats-, Jahres- und Gesamtrangliste
-- PDF-Ausgabe
-- zwei Automaten
-- Spielerwechsel
-- Gäste
-- Kostenregel 2:0 = 1,00 € pro Spieler; 2:1 = 1,50 € pro Spieler
-
-Hinweis: Gespeicherte Daten liegen lokal auf dem jeweiligen Gerät.
+Auf GitHub alle enthaltenen Dateien ersetzen. Danach etwa 1 Minute warten und prüfen, ob oben v11 steht.

@@ -88,10 +88,23 @@ tbody tr:nth-child(even) td{background:#f8fafc}
  .player-choice,.result-select{display:block!important;border:0;background:#fff;color:#000}
  .note,.pause{background:#fff!important;color:#000!important}
 }
+
+.status-top{border-radius:14px;padding:12px 14px;margin-bottom:12px;font-weight:900;text-align:center;border:1px solid var(--line)}
+.status-top.open{background:#fff4ca;border-color:#d8b64b;color:#654c00}.status-top.done{background:#dff3e5;border-color:#5ba878;color:#155632}
+button:disabled{opacity:.45;cursor:not-allowed}
+.round.round-open{border:2px solid #d8b64b}.round.round-done{border:2px solid #2d9158}
+.round-state,.game-status{padding:4px 9px;border-radius:999px;font-size:12px;font-weight:900}
+.round-state.open,.game-status.open{background:#ffe88e;color:#654c00}.round-state.done,.game-status.done{background:#a8e5be;color:#155632}
+.game.game-open{background:linear-gradient(90deg,#fff9dc,#fffdf3);border-left:7px solid #d8b64b}
+.game.game-done{background:linear-gradient(90deg,#e2f7e9,#f6fff9);border-left:7px solid #1f8a51}
+.game-title{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
+.player-choice.winner{background:#c9efd7;border:2px solid #1f8a51;color:#13552f}
+.player-choice.loser{background:#f9d6d6;border:2px solid #b94242;color:#762121}
+.game-done .note{background:#d8f1e1;border-color:#79ba91;color:#155632}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters – Training <span class="version">v10</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters – Training <span class="version">v11</span></header>
 <main>
 
 <section class="card no-print">
@@ -114,12 +127,13 @@ tbody tr:nth-child(even) td{background:#f8fafc}
 
 <section class="card controls-card">
 <h2>2. Spielart & Auslosung</h2>
+<div id="overallStatus" class="status-top done">Noch keine Runde gestartet</div>
 <div class="tabs">
 <button id="einzelBtn" class="tab active" onclick="setMode('einzel')">Einzel</button>
 <button id="doppelBtn" class="tab" onclick="setMode('doppel')">Doppel</button>
 </div>
 <div class="actions" style="margin-top:10px">
-<button class="primary" onclick="drawRound()">Nächste Runde auslosen</button>
+<button id="drawBtn" class="primary" onclick="drawRound()">Nächste Runde auslosen</button>
 <button class="light" onclick="undoRound()">Letzte Runde löschen</button>
 </div>
 <p class="small"><strong>Zwei Automaten:</strong> maximal zwei Partien gleichzeitig. Spielernamen können nach der Auslosung geändert werden.</p>
@@ -152,7 +166,7 @@ tbody tr:nth-child(even) td{background:#f8fafc}
 <h2>6. Training abschließen</h2>
 <div class="actions">
 <button class="secondary" onclick="archiveDay()">Trainingstag speichern</button>
-<button class="primary" onclick="exportPDF()">Spielstände als PDF</button>
+<button class="primary" onclick="exportCurrentPDF()">Spielstände als PDF</button>
 <button class="danger" onclick="resetDay()">Neuen Trainingstag starten</button>
 </div>
 <p class="small">Beim Speichern wird der heutige Stand ins Archiv übernommen. Die aktive Spielerliste bleibt erhalten.</p>
@@ -183,7 +197,7 @@ tbody tr:nth-child(even) td{background:#f8fafc}
 </main>
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
-const STORAGE="dc-hunters-v10";
+const STORAGE="dc-hunters-v11";
 let mode="einzel";
 let state=JSON.parse(localStorage.getItem(STORAGE)||"null")||{
  players:[...basePlayers],guests:[],present:Object.fromEntries(basePlayers.map(n=>[n,true])),
@@ -251,7 +265,12 @@ function bestDoubles(list){
  }
  return best;
 }
+function currentRoundComplete(){
+ if(!state.rounds.length)return true;
+ return state.rounds[state.rounds.length-1].games.every(g=>!!g.result);
+}
 function drawRound(){
+ if(!currentRoundComplete()){alert("Die aktuelle Runde ist noch nicht beendet. Bitte zuerst alle Ergebnisse eintragen.");return}
  const present=allPlayers().filter(n=>state.present[n]!==false);
  if(mode==="einzel"&&present.length<2){alert("Mindestens 2 Spieler nötig.");return}
  if(mode==="doppel"&&present.length<4){alert("Mindestens 4 Spieler nötig.");return}
@@ -281,20 +300,29 @@ function changePlayer(roundId,gameIndex,slot,newName){
  rebuildHistory();persist();renderAll();
 }
 function setResult(id,i,v){const r=state.rounds.find(x=>x.id===id);if(r){r.games[i].result=v;persist();renderAll()}}
-function rule(g){if(!g.result)return"Noch kein Ergebnis";return(g.result==="2:0"||g.result==="0:2")?"Jeder zahlt 1,00 €":"Jeder zahlt 1,50 €"}
+function rule(g){if(!g.result)return"Noch offen – Ergebnis eintragen";return(g.result==="2:0"||g.result==="0:2")?"Beendet · jeder zahlt 1,00 €":"Beendet · jeder zahlt 1,50 €"}
+function winnerSlots(r,g){
+ if(!g.result)return{w:[],l:[]};
+ const left=g.result==="2:0"||g.result==="2:1";
+ if(r.mode==="einzel")return left?{w:[0],l:[1]}:{w:[1],l:[0]};
+ return left?{w:[0,1],l:[2,3]}:{w:[2,3],l:[0,1]};
+}
 function renderRounds(){
  rounds.innerHTML=state.rounds.length?"":'<p class="small">Noch keine Runde ausgelost.</p>';
  state.rounds.forEach((r,ri)=>{
-  const box=document.createElement("div");box.className="round";box.innerHTML='<div class="round-head"><span>Runde '+(ri+1)+' – '+(r.mode==="einzel"?"Einzel":"Doppel")+'</span><span class="badge">'+r.games.length+' Partie(n)</span></div>';
+  const complete=r.games.every(g=>!!g.result),box=document.createElement("div");
+  box.className="round "+(complete?"round-done":"round-open");
+  box.innerHTML='<div class="round-head"><span>Runde '+(ri+1)+' – '+(r.mode==="einzel"?"Einzel":"Doppel")+'</span><span class="round-state '+(complete?"done":"open")+'">'+(complete?"✓ Runde beendet":"● Spiele offen")+'</span></div>';
   r.games.forEach((g,gi)=>{
-   const d=document.createElement("div");d.className="game";
+   const done=!!g.result,wl=winnerSlots(r,g),d=document.createElement("div");d.className="game "+(done?"game-done":"game-open");
+   d.innerHTML='<div class="game-title"><strong>Automat '+(gi+1)+'</strong><span class="game-status '+(done?"done":"open")+'">'+(done?"✓ beendet":"● offen")+'</span></div>';
+   const cls=s=>wl.w.includes(s)?" winner":wl.l.includes(s)?" loser":"";
    let m='';
-   if(r.mode==="einzel")m='<div class="match"><select class="player-choice" data-slot="0">'+playerOptions(g.players[0])+'</select><div class="vs">gegen</div><select class="player-choice" data-slot="1">'+playerOptions(g.players[1])+'</select></div>';
-   else m='<div class="match"><div class="team-selects"><select class="player-choice" data-slot="0">'+playerOptions(g.players[0])+'</select><select class="player-choice" data-slot="1">'+playerOptions(g.players[1])+'</select></div><div class="vs">gegen</div><div class="team-selects"><select class="player-choice" data-slot="2">'+playerOptions(g.players[2])+'</select><select class="player-choice" data-slot="3">'+playerOptions(g.players[3])+'</select></div></div>';
-   d.innerHTML=m+'<div class="result"><select class="result-select"><option value="">Ergebnis wählen</option><option>2:0</option><option>2:1</option><option>1:2</option><option>0:2</option></select><div class="note">'+rule(g)+'</div></div>';
+   if(r.mode==="einzel")m='<div class="match"><select class="player-choice'+cls(0)+'" data-slot="0">'+playerOptions(g.players[0])+'</select><div class="vs">gegen</div><select class="player-choice'+cls(1)+'" data-slot="1">'+playerOptions(g.players[1])+'</select></div>';
+   else m='<div class="match"><div class="team-selects"><select class="player-choice'+cls(0)+'" data-slot="0">'+playerOptions(g.players[0])+'</select><select class="player-choice'+cls(1)+'" data-slot="1">'+playerOptions(g.players[1])+'</select></div><div class="vs">gegen</div><div class="team-selects"><select class="player-choice'+cls(2)+'" data-slot="2">'+playerOptions(g.players[2])+'</select><select class="player-choice'+cls(3)+'" data-slot="3">'+playerOptions(g.players[3])+'</select></div></div>';
+   d.innerHTML+=m+'<div class="result"><select class="result-select"><option value="">Ergebnis wählen</option><option>2:0</option><option>2:1</option><option>1:2</option><option>0:2</option></select><div class="note">'+rule(g)+'</div></div>';
    d.querySelectorAll(".player-choice").forEach(s=>s.onchange=()=>changePlayer(r.id,gi,Number(s.dataset.slot),s.value));
-   const rs=d.querySelector(".result-select");rs.value=g.result;rs.onchange=()=>setResult(r.id,gi,rs.value);
-   box.appendChild(d);
+   const rs=d.querySelector(".result-select");rs.value=g.result;rs.onchange=()=>setResult(r.id,gi,rs.value);box.appendChild(d);
   });
   if(r.pauses.length){const p=document.createElement("div");p.className="pause";p.textContent="Pause: "+r.pauses.join(", ");box.appendChild(p)}
   rounds.appendChild(box);
@@ -323,16 +351,21 @@ function renderBilling(){
  const c=calculate(),rows=rankedRows(c.players);billing.innerHTML="";let total=0;
  rows.forEach(([n,x],i)=>{total+=x.cost;const q=x.games?Math.round(x.wins/x.games*100):0,tr=document.createElement("tr");if(i<3)tr.className="rank"+(i+1);tr.innerHTML='<td>'+(i+1)+'</td><td>'+n+'</td><td>'+x.games+'</td><td>'+x.wins+'</td><td>'+x.losses+'</td><td>'+x.legs+'</td><td>'+q+'%</td><td>'+x.pauses+'</td><td class="money"><b>'+euro(x.cost)+'</b></td>';billing.appendChild(tr)});
  grandTotal.textContent=euro(total);summaryMoney.textContent=euro(total);summaryMatches.textContent=c.completed;summaryRounds.textContent=state.rounds.length;
+ const open=state.rounds.length&&!currentRoundComplete();
+ overallStatus.className="status-top "+(open?"open":"done");
+ overallStatus.textContent=state.rounds.length?(open?"⚠ Aktuelle Runde: Spiele noch offen":"✓ Alle Spiele der aktuellen Runde beendet"):"Noch keine Runde gestartet";
+ drawBtn.disabled=open;
 }
 function snapshot(){
  const c=calculate();return{date:trainingDate.value||todayISO(),savedAt:new Date().toISOString(),rounds:JSON.parse(JSON.stringify(state.rounds)),stats:c.players,total:Object.values(c.players).reduce((s,x)=>s+x.cost,0),completed:c.completed}
 }
 function archiveDay(){
  if(!state.rounds.length){alert("Noch keine Runden vorhanden.");return}
+ if(!currentRoundComplete()&&!confirm("Es sind noch Spiele offen. Trainingstag trotzdem speichern?"))return
  const snap=snapshot(),same=state.archive.findIndex(x=>x.date===snap.date);
  if(same>=0&&!confirm("Für dieses Datum existiert bereits ein Eintrag. Ersetzen?"))return;
  if(same>=0)state.archive.splice(same,1);
- state.archive.unshift(snap);persist();renderHistory();renderLongTermRanking();alert("Trainingstag gespeichert.");
+ state.archive.unshift(snap);persist();renderHistory();renderLongTermRanking();alert("✓ Trainingstag wurde gespeichert.");
 }
 function renderHistory(){
  archiveCount.textContent=state.archive.length;history.innerHTML=state.archive.length?"":'<p class="small">Noch keine Trainingstage gespeichert.</p>';
@@ -357,13 +390,28 @@ function renderLongTermRanking(){
  longRanking.innerHTML="";
  rankedRows(agg).forEach(([n,x],i)=>{const q=x.games?Math.round(x.wins/x.games*100):0,tr=document.createElement("tr");if(i<3)tr.className="rank"+(i+1);tr.innerHTML='<td>'+(i+1)+'</td><td>'+n+'</td><td>'+x.games+'</td><td>'+x.wins+'</td><td>'+x.losses+'</td><td>'+x.legs+'</td><td>'+q+'%</td><td class="money">'+euro(x.cost)+'</td>';longRanking.appendChild(tr)});
 }
-function exportPDF(){window.print()}
+function pdfEscape(s){return String(s).replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)").replace(/[äÄ]/g,"ae").replace(/[öÖ]/g,"oe").replace(/[üÜ]/g,"ue").replace(/ß/g,"ss").replace(/€/g,"EUR")}
+function pdfLinesFromSnapshot(snap){
+ const lines=["DC HUNTERS - TRAININGSBERICHT","Trainingstag: "+new Date(snap.date+"T12:00:00").toLocaleDateString("de-DE"),"","SPIELE"];
+ snap.rounds.forEach((r,ri)=>{lines.push("Runde "+(ri+1)+" - "+(r.mode==="einzel"?"Einzel":"Doppel"));r.games.forEach((g,gi)=>{let a,b;if(r.mode==="einzel"){a=g.players[0];b=g.players[1]}else{a=g.players[0]+" + "+g.players[1];b=g.players[2]+" + "+g.players[3]}lines.push("  Automat "+(gi+1)+": "+a+"  "+(g.result||"-")+"  "+b)});if(r.pauses.length)lines.push("  Pause: "+r.pauses.join(", "));lines.push("")});
+ lines.push("ABRECHNUNG / STATISTIK");rankedRows(snap.stats).forEach(([n,x],i)=>{const q=x.games?Math.round(x.wins/x.games*100):0;lines.push((i+1)+". "+n+" | Spiele "+x.games+" | Siege "+x.wins+" | Niederl. "+x.losses+" | Quote "+q+"% | "+euro(x.cost))});lines.push("","Gesamteinnahmen: "+euro(snap.total));return lines;
+}
+function createSimplePDF(lines,filename){
+ const perPage=46,pages=[];for(let i=0;i<lines.length;i+=perPage)pages.push(lines.slice(i,i+perPage));
+ const objs=[];const add=s=>{objs.push(s);return objs.length};const f1=add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"),f2=add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>"),pageObjs=[],contentObjs=[];
+ pages.forEach(page=>{let y=800,c="BT\\n/F2 16 Tf\\n1 0 0 1 50 "+y+" Tm\\n("+pdfEscape(page[0]||"DC Hunters")+") Tj\\n/F1 10 Tf\\n";y-=28;page.slice(1).forEach(line=>{let t=pdfEscape(line);const chunks=[];while(t.length>88){chunks.push(t.slice(0,88));t=t.slice(88)}chunks.push(t);chunks.forEach(x=>{c+="1 0 0 1 50 "+y+" Tm\\n("+x+") Tj\\n";y-=15})});c+="ET";contentObjs.push(add("<< /Length "+c.length+" >>\\nstream\\n"+c+"\\nendstream"));pageObjs.push(add(""))});
+ const pagesObj=add("");pageObjs.forEach((p,i)=>objs[p-1]="<< /Type /Page /Parent "+pagesObj+" 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 "+f1+" 0 R /F2 "+f2+" 0 R >> >> /Contents "+contentObjs[i]+" 0 R >>");objs[pagesObj-1]="<< /Type /Pages /Kids ["+pageObjs.map(n=>n+" 0 R").join(" ")+"] /Count "+pageObjs.length+" >>";const catalog=add("<< /Type /Catalog /Pages "+pagesObj+" 0 R >>");
+ let pdf="%PDF-1.4\\n",offs=[0];objs.forEach((o,i)=>{offs.push(pdf.length);pdf+=(i+1)+" 0 obj\\n"+o+"\\nendobj\\n"});const xref=pdf.length;pdf+="xref\\n0 "+(objs.length+1)+"\\n0000000000 65535 f \\n";for(let i=1;i<=objs.length;i++)pdf+=String(offs[i]).padStart(10,"0")+" 00000 n \\n";pdf+="trailer\\n<< /Size "+(objs.length+1)+" /Root "+catalog+" 0 R >>\\nstartxref\\n"+xref+"\\n%%EOF";
+ const blob=new Blob([pdf],{type:"application/pdf"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1500);
+}
+function exportCurrentPDF(){const snap=snapshot();createSimplePDF(pdfLinesFromSnapshot(snap),"DC_Hunters_"+snap.date+".pdf")}
+function exportArchivePDF(i){const snap=state.archive[i];if(snap)createSimplePDF(pdfLinesFromSnapshot(snap),"DC_Hunters_"+snap.date+".pdf")}
 function resetDay(){
  if(!confirm("Aktuellen Trainingstag löschen und neu starten?"))return;
  state.rounds=[];state.history={opponents:{},pauses:Object.fromEntries(allPlayers().map(n=>[n,0]))};trainingDate.value=todayISO();persist();renderAll();
 }
 function renderAll(){renderPlayers();renderRounds();renderBilling();renderHistory();renderLongTermRanking()}
-trainingDate.value=todayISO();trainingDate.onchange=persist;
+trainingDate.value=state.activeDate||todayISO();trainingDate.onchange=()=>{state.activeDate=trainingDate.value;persist()};
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
 renderAll();
 </script>
