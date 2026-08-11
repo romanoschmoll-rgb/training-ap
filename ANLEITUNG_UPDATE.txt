@@ -1,17 +1,23 @@
-DC Hunters v16
+DC Hunters v17
 
-KORREKTUR FREUNDSCHAFTSSPIEL:
-- Liga-Auswahl: A, B, C, BZ, BZO.
-- A / B / C spielen genau Doppel 1 und Doppel 2.
-- BZ / BZO spielen Doppel 1 bis Doppel 4.
-- Doppelreihenfolge nach dem fotografierten Spielberichtsbogen:
-  1: H1+H2 gegen G1+G2
-  2: H3+H4 gegen G3+G4
-  3: H1+H2 gegen G3+G4
-  4: H3+H4 gegen G1+G2
-- In A/B/C werden Doppel 3 und 4 NICHT erzeugt.
-- In BZ/BZO werden alle vier Doppel erzeugt.
-- Einzel, Spielerwechsel, Statusfarben und Abrechnung bleiben erhalten.
+TRAINING
+- Zwei offene Runden können gleichzeitig vorbereitet sein.
+- Erste offene Runde = Aktuelle Runde (gelb).
+- Zweite offene Runde = Als Nächstes (blau).
+- Die nächste Paarung ist früh sichtbar, damit sich Spieler bereithalten können.
+- In der nächsten Runde können noch keine Ergebnisse eingetragen werden.
+- Sobald die aktuelle Runde beendet ist, wird „Als Nächstes“ automatisch zur aktuellen Runde.
+- Danach kann wieder eine weitere Runde vorausgelost werden.
 
-Auf GitHub alle enthaltenen Dateien ersetzen.
-Danach muss oben v16 stehen.
+FREUNDSCHAFTSSPIEL
+- Alle Doppel stehen zuerst.
+- A/B/C: Doppel 1–2.
+- BZ/BZO: Doppel 1–4.
+- Danach folgen die Einzel.
+
+PDF
+- iPad/iPhone: Teilen → In Dateien sichern.
+- Falls die Teilen-Funktion nicht direkt erscheint, öffnet sich die PDF in Safari.
+- Windows: normale PDF-Datei wird heruntergeladen.
+
+Alle Dateien auf GitHub ersetzen. Danach muss oben v17 stehen.

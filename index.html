@@ -124,10 +124,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .round-friendly{border:1px solid var(--line);border-radius:15px;padding:12px;margin:12px 0}
 .round-friendly h3{margin:0 0 8px}
 @media(max-width:700px){.friendly-grid,.fixture-match,.fixture-actions,.scorebox{grid-template-columns:1fr}.fixture-match .vs{display:none}}
+
+.round.round-next{border:2px solid #4d85b5;background:#eef6fc}
+.round-state.next,.game-status.next{background:#d8eaf8;color:#194b73}
+.game.game-next{background:#f0f7fc;border-left:7px solid #4d85b5}
+.next-banner{background:#dcecf8;border:1px solid #7ba8ca;color:#194b73;border-radius:12px;padding:10px 12px;margin:8px 0;font-weight:900;text-align:center}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v16</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v17</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -161,7 +166,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button id="doppelBtn" class="tab" onclick="setMode('doppel')">Doppel</button>
 </div>
 <div class="actions" style="margin-top:10px">
-<button id="drawBtn" class="primary" onclick="drawRound()">Nächste Runde auslosen</button>
+<button id="drawBtn" class="primary" onclick="drawRound()">Runde auslosen / vorauslosen</button>
 <button class="light" onclick="undoRound()">Letzte Runde löschen</button>
 </div>
 <p class="small"><strong>Zwei Automaten:</strong> maximal zwei Partien gleichzeitig. Spielernamen können nach der Auslosung geändert werden.</p>
@@ -286,7 +291,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </main>
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
-const STORAGE="dc-hunters-v16";
+const STORAGE="dc-hunters-v17";
 let mode="einzel";
 let state=JSON.parse(localStorage.getItem(STORAGE)||"null")||{
  players:[...basePlayers],guests:[],present:Object.fromEntries(basePlayers.map(n=>[n,true])),
@@ -354,12 +359,14 @@ function bestDoubles(list){
  }
  return best;
 }
+function unfinishedRounds(){
+ return state.rounds.filter(r=>!r.games.every(g=>!!g.result));
+}
 function currentRoundComplete(){
- if(!state.rounds.length)return true;
- return state.rounds[state.rounds.length-1].games.every(g=>!!g.result);
+ return unfinishedRounds().length===0;
 }
 function drawRound(){
- if(!currentRoundComplete()){alert("Die aktuelle Runde ist noch nicht beendet. Bitte zuerst alle Ergebnisse eintragen.");return}
+ if(unfinishedRounds().length>=2){alert("Aktuelle Runde und nächste Runde sind bereits vorbereitet.");return}
  const present=allPlayers().filter(n=>state.present[n]!==false);
  if(mode==="einzel"&&present.length<2){alert("Mindestens 2 Spieler nötig.");return}
  if(mode==="doppel"&&present.length<4){alert("Mindestens 4 Spieler nötig.");return}
@@ -396,24 +403,45 @@ function winnerSlots(r,g){
  if(r.mode==="einzel")return left?{w:[0],l:[1]}:{w:[1],l:[0]};
  return left?{w:[0,1],l:[2,3]}:{w:[2,3],l:[0,1]};
 }
+function winnerSlots(r,g){
+ if(!g.result)return{w:[],l:[]};
+ const left=g.result==="2:0"||g.result==="2:1";
+ if(r.mode==="einzel")return left?{w:[0],l:[1]}:{w:[1],l:[0]};
+ return left?{w:[0,1],l:[2,3]}:{w:[2,3],l:[0,1]};
+}
 function renderRounds(){
  rounds.innerHTML=state.rounds.length?"":'<p class="small">Noch keine Runde ausgelost.</p>';
+ const pending=state.rounds.map((r,i)=>({r,i})).filter(x=>!x.r.games.every(g=>!!g.result)).map(x=>x.i);
+ const currentIdx=pending.length?pending[0]:-1,nextIdx=pending.length>1?pending[1]:-1;
+
  state.rounds.forEach((r,ri)=>{
-  const complete=r.games.every(g=>!!g.result),box=document.createElement("div");
-  box.className="round "+(complete?"round-done":"round-open");
-  box.innerHTML='<div class="round-head"><span>Runde '+(ri+1)+' – '+(r.mode==="einzel"?"Einzel":"Doppel")+'</span><span class="round-state '+(complete?"done":"open")+'">'+(complete?"✓ Runde beendet":"● Spiele offen")+'</span></div>';
+  const complete=r.games.every(g=>!!g.result),isCurrent=ri===currentIdx,isNext=ri===nextIdx;
+  const box=document.createElement("div");
+  box.className=complete?"round round-done":isNext?"round round-next":"round round-open";
+  const label=complete?"✓ Runde beendet":isNext?"⏭ Als Nächstes":"● Aktuelle Runde";
+  const labelClass=complete?"done":isNext?"next":"open";
+  box.innerHTML='<div class="round-head"><span>Runde '+(ri+1)+' – '+(r.mode==="einzel"?"Einzel":"Doppel")+'</span><span class="round-state '+labelClass+'">'+label+'</span></div>';
+  if(isNext){const n=document.createElement("div");n.className="next-banner";n.textContent="Als Nächstes – bitte schon bereithalten";box.appendChild(n)}
+
   r.games.forEach((g,gi)=>{
-   const done=!!g.result,wl=winnerSlots(r,g),d=document.createElement("div");d.className="game "+(done?"game-done":"game-open");
-   d.innerHTML='<div class="game-title"><strong>Automat '+(gi+1)+'</strong><span class="game-status '+(done?"done":"open")+'">'+(done?"✓ beendet":"● offen")+'</span></div>';
+   const done=!!g.result,wl=winnerSlots(r,g),d=document.createElement("div");
+   d.className="game "+(done?"game-done":isNext?"game-next":"game-open");
+   const st=done?"✓ beendet":isNext?"⏭ danach":"● offen";
+   const sc=done?"done":isNext?"next":"open";
+   d.innerHTML='<div class="game-title"><strong>Automat '+(gi+1)+'</strong><span class="game-status '+sc+'">'+st+'</span></div>';
    const cls=s=>wl.w.includes(s)?" winner":wl.l.includes(s)?" loser":"";
-   let m='';
-   if(r.mode==="einzel")m='<div class="match"><select class="player-choice'+cls(0)+'" data-slot="0">'+playerOptions(g.players[0])+'</select><div class="vs">gegen</div><select class="player-choice'+cls(1)+'" data-slot="1">'+playerOptions(g.players[1])+'</select></div>';
-   else m='<div class="match"><div class="team-selects"><select class="player-choice'+cls(0)+'" data-slot="0">'+playerOptions(g.players[0])+'</select><select class="player-choice'+cls(1)+'" data-slot="1">'+playerOptions(g.players[1])+'</select></div><div class="vs">gegen</div><div class="team-selects"><select class="player-choice'+cls(2)+'" data-slot="2">'+playerOptions(g.players[2])+'</select><select class="player-choice'+cls(3)+'" data-slot="3">'+playerOptions(g.players[3])+'</select></div></div>';
-   d.innerHTML+=m+'<div class="result"><select class="result-select"><option value="">Ergebnis wählen</option><option>2:0</option><option>2:1</option><option>1:2</option><option>0:2</option></select><div class="note">'+rule(g)+'</div></div>';
+   let m="";
+   if(r.mode==="einzel"){
+    m='<div class="match"><select class="player-choice'+cls(0)+'" data-slot="0">'+playerOptions(g.players[0])+'</select><div class="vs">gegen</div><select class="player-choice'+cls(1)+'" data-slot="1">'+playerOptions(g.players[1])+'</select></div>';
+   }else{
+    m='<div class="match"><div class="team-selects"><select class="player-choice'+cls(0)+'" data-slot="0">'+playerOptions(g.players[0])+'</select><select class="player-choice'+cls(1)+'" data-slot="1">'+playerOptions(g.players[1])+'</select></div><div class="vs">gegen</div><div class="team-selects"><select class="player-choice'+cls(2)+'" data-slot="2">'+playerOptions(g.players[2])+'</select><select class="player-choice'+cls(3)+'" data-slot="3">'+playerOptions(g.players[3])+'</select></div></div>';
+   }
+   d.innerHTML+=m+'<div class="result"><select class="result-select"><option value="">Ergebnis wählen</option><option>2:0</option><option>2:1</option><option>1:2</option><option>0:2</option></select><div class="note">'+(isNext&&!g.result?"Als Nächstes – Ergebnis erst später":rule(g))+'</div></div>';
    d.querySelectorAll(".player-choice").forEach(s=>s.onchange=()=>changePlayer(r.id,gi,Number(s.dataset.slot),s.value));
-   const rs=d.querySelector(".result-select");rs.value=g.result;rs.onchange=()=>setResult(r.id,gi,rs.value);box.appendChild(d);
+   const rs=d.querySelector(".result-select");rs.value=g.result;rs.disabled=isNext;rs.onchange=()=>setResult(r.id,gi,rs.value);
+   box.appendChild(d);
   });
-  if(r.pauses.length){const p=document.createElement("div");p.className="pause";p.textContent="Pause: "+r.pauses.join(", ");box.appendChild(p)}
+  if(r.pauses.length){const p=document.createElement("div");p.className="pause";p.textContent=(isNext?"Pause als Nächstes: ":"Pause: ")+r.pauses.join(", ");box.appendChild(p)}
   rounds.appendChild(box);
  });
 }
@@ -440,17 +468,20 @@ function renderBilling(){
  const c=calculate(),rows=rankedRows(c.players);billing.innerHTML="";let total=0;
  rows.forEach(([n,x],i)=>{total+=x.cost;const q=x.games?Math.round(x.wins/x.games*100):0,tr=document.createElement("tr");if(i<3)tr.className="rank"+(i+1);tr.innerHTML='<td>'+(i+1)+'</td><td>'+n+'</td><td>'+x.games+'</td><td>'+x.wins+'</td><td>'+x.losses+'</td><td>'+x.legs+'</td><td>'+q+'%</td><td>'+x.pauses+'</td><td class="money"><b>'+euro(x.cost)+'</b></td>';billing.appendChild(tr)});
  grandTotal.textContent=euro(total);summaryMoney.textContent=euro(total);summaryMatches.textContent=c.completed;summaryRounds.textContent=state.rounds.length;
- const open=state.rounds.length&&!currentRoundComplete();
+ const unfinished=unfinishedRounds(),open=unfinished.length>0;
  overallStatus.className="status-top "+(open?"open":"done");
- overallStatus.textContent=state.rounds.length?(open?"⚠ Aktuelle Runde: Spiele noch offen":"✓ Alle Spiele der aktuellen Runde beendet"):"Noch keine Runde gestartet";
- drawBtn.disabled=open;
+ if(!state.rounds.length)overallStatus.textContent="Noch keine Runde gestartet";
+ else if(unfinished.length===2)overallStatus.textContent="● Aktuelle Runde läuft · ⏭ nächste Runde ist vorbereitet";
+ else if(unfinished.length===1)overallStatus.textContent="● Aktuelle Runde läuft · nächste Runde kann vorausgelost werden";
+ else overallStatus.textContent="✓ Alle ausgelosten Runden beendet";
+ drawBtn.disabled=unfinished.length>=2;
 }
 function snapshot(){
  const c=calculate();return{date:trainingDate.value||todayISO(),savedAt:new Date().toISOString(),rounds:JSON.parse(JSON.stringify(state.rounds)),stats:c.players,total:Object.values(c.players).reduce((s,x)=>s+x.cost,0),completed:c.completed}
 }
 function archiveDay(){
  if(!state.rounds.length){alert("Noch keine Runden vorhanden.");return}
- if(!currentRoundComplete()&&!confirm("Es sind noch Spiele offen. Trainingstag trotzdem speichern?"))return
+ if(unfinishedRounds().length&&!confirm("Es sind noch Spiele offen oder vorausgelost. Trainingstag trotzdem speichern?"))return
  const snap=snapshot(),same=state.archive.findIndex(x=>x.date===snap.date);
  if(same>=0&&!confirm("Für dieses Datum existiert bereits ein Eintrag. Ersetzen?"))return;
  if(same>=0)state.archive.splice(same,1);
@@ -491,7 +522,23 @@ function createSimplePDF(lines,filename){
  pages.forEach(page=>{let y=800,c="BT\\n/F2 16 Tf\\n1 0 0 1 50 "+y+" Tm\\n("+pdfEscape(page[0]||"DC Hunters")+") Tj\\n/F1 10 Tf\\n";y-=28;page.slice(1).forEach(line=>{let t=pdfEscape(line);const chunks=[];while(t.length>88){chunks.push(t.slice(0,88));t=t.slice(88)}chunks.push(t);chunks.forEach(x=>{c+="1 0 0 1 50 "+y+" Tm\\n("+x+") Tj\\n";y-=15})});c+="ET";contentObjs.push(add("<< /Length "+c.length+" >>\\nstream\\n"+c+"\\nendstream"));pageObjs.push(add(""))});
  const pagesObj=add("");pageObjs.forEach((p,i)=>objs[p-1]="<< /Type /Page /Parent "+pagesObj+" 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 "+f1+" 0 R /F2 "+f2+" 0 R >> >> /Contents "+contentObjs[i]+" 0 R >>");objs[pagesObj-1]="<< /Type /Pages /Kids ["+pageObjs.map(n=>n+" 0 R").join(" ")+"] /Count "+pageObjs.length+" >>";const catalog=add("<< /Type /Catalog /Pages "+pagesObj+" 0 R >>");
  let pdf="%PDF-1.4\\n",offs=[0];objs.forEach((o,i)=>{offs.push(pdf.length);pdf+=(i+1)+" 0 obj\\n"+o+"\\nendobj\\n"});const xref=pdf.length;pdf+="xref\\n0 "+(objs.length+1)+"\\n0000000000 65535 f \\n";for(let i=1;i<=objs.length;i++)pdf+=String(offs[i]).padStart(10,"0")+" 00000 n \\n";pdf+="trailer\\n<< /Size "+(objs.length+1)+" /Root "+catalog+" 0 R >>\\nstartxref\\n"+xref+"\\n%%EOF";
- const blob=new Blob([pdf],{type:"application/pdf"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1500);
+ const blob=new Blob([pdf],{type:"application/pdf"});
+ const file=new File([blob],filename,{type:"application/pdf"});
+ if(navigator.share){
+  try{
+   if(!navigator.canShare||navigator.canShare({files:[file]})){navigator.share({files:[file],title:"DC Hunters PDF"});return}
+  }catch(e){}
+ }
+ const url=URL.createObjectURL(blob);
+ const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+ if(isIOS){
+  const w=window.open(url,"_blank");
+  if(w)alert("PDF geöffnet. Jetzt Teilen → In Dateien sichern.");
+  else alert("Bitte Pop-ups erlauben und den PDF-Button erneut drücken.");
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+ }else{
+  const a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+ }
 }
 function exportCurrentPDF(){const snap=snapshot();createSimplePDF(pdfLinesFromSnapshot(snap),"DC_Hunters_"+snap.date+".pdf")}
 function exportArchivePDF(i){const snap=state.archive[i];if(snap)createSimplePDF(pdfLinesFromSnapshot(snap),"DC_Hunters_"+snap.date+".pdf")}
@@ -504,7 +551,7 @@ function showAppView(v){
  trainingView.classList.toggle("view-hidden",v!=="training");friendlyView.classList.toggle("view-hidden",v!=="friendly");
  trainingViewBtn.classList.toggle("active",v==="training");friendlyViewBtn.classList.toggle("active",v==="friendly");
 }
-const FRIENDLY_KEY="dc-hunters-friendly-v16";
+const FRIENDLY_KEY="dc-hunters-friendly-v17";
 let friendly=JSON.parse(localStorage.getItem(FRIENDLY_KEY)||"null")||{home:["","","","","","","",""],guest:["","","","","","","",""],fixtures:[],archive:[]};
 if(!friendly.archive)friendly.archive=[];
 const fLabelsHome=["H1","H2","H3","H4","HE1","HE2","HE3","HE4"],fLabelsGuest=["G1","G2","G3","G4","GE1","GE2","GE3","GE4"];
@@ -523,12 +570,7 @@ const fDoublesAll=[
 function friendlyScheduleForLeague(league){
  const doubleCount=(league==="BZ"||league==="BZO")?4:2;
  const doubles=fDoublesAll.filter(x=>x.no<=doubleCount);
- const schedule=[];
- [1,2,3,4].forEach(r=>{
-   doubles.filter(x=>x.r===r).forEach(x=>schedule.push({...x}));
-   fSingles.filter(x=>x.r===r).forEach(x=>schedule.push({...x}));
- });
- return schedule;
+ return [...doubles,...fSingles];
 }
 function persistFriendly(){
  friendly.home=fLabelsHome.map((_,i)=>document.getElementById("fh"+i)?.value??friendly.home[i]??"");
@@ -618,77 +660,29 @@ function renderFriendlyBilling(){
 function renderFriendly(){
  if(!friendly.fixtures.length){
   fFixtures.innerHTML='<p class="small">Noch kein Spielplan erstellt.</p>';
-  fOverall.className="status-top done";
-  fOverall.textContent="Noch kein Spielplan erstellt";
-  fHomeGames.textContent="0";fGuestGames.textContent="0";fDoneCount.textContent="0";
-  renderFriendlyBilling();
-  return;
+  fOverall.className="status-top done";fOverall.textContent="Noch kein Spielplan erstellt";
+  fHomeGames.textContent="0";fGuestGames.textContent="0";fDoneCount.textContent="0";renderFriendlyBilling();return;
  }
  fFixtures.innerHTML="";
- [1,2,3,4].forEach(r=>{
-  const round=document.createElement("div");
-  round.className="round-friendly";
-  round.innerHTML="<h3>Runde "+r+"</h3>";
-  friendly.fixtures.filter(x=>x.r===r).forEach(x=>{
-   const st=x.status||"planned";
-   const label=st==="planned"?"○ nicht aktiv":st==="active"?"● läuft":"✓ beendet";
-   const fixture=document.createElement("div");
-   fixture.className="fixture "+st;
-
-   const head=document.createElement("div");
-   head.className="fixture-head";
-   head.innerHTML="<strong>"+x.type+"</strong><span class=\"fixture-status "+st+"\">"+label+"</span>";
-   fixture.appendChild(head);
-
-   const match=document.createElement("div");
-   match.className="fixture-match";
-
-   const makeSide=(side,slots)=>{
-    const wrap=document.createElement("div");
-    wrap.className="side";
-    slots.forEach((slot,pos)=>{
-     const s=document.createElement("select");
-     s.innerHTML=fOptions(side,slot);
-     s.value=String(slot);
-     s.onchange=()=>changeFPlayer(x.id,side,pos,s.value);
-     wrap.appendChild(s);
-    });
-    return wrap;
-   };
-
-   match.appendChild(makeSide("h",x.h));
-   const vs=document.createElement("div");vs.className="vs";vs.textContent="gegen";match.appendChild(vs);
-   match.appendChild(makeSide("g",x.g));
-   fixture.appendChild(match);
-
-   const score=document.createElement("div");
-   score.className="scorebox";
-   const resultSelect=document.createElement("select");
-   resultSelect.innerHTML='<option value="">Ergebnis wählen</option><option value="2:0">2:0</option><option value="2:1">2:1</option><option value="1:2">1:2</option><option value="0:2">0:2</option>';
-   resultSelect.value=x.result||"";
-   resultSelect.onchange=()=>setFResult(x.id,resultSelect.value);
-   score.appendChild(resultSelect);
-   const note=document.createElement("div");note.className="note";note.textContent=x.result?"Ergebnis: "+x.result:"Noch kein Ergebnis";score.appendChild(note);
-   fixture.appendChild(score);
-
-   const actions=document.createElement("div");actions.className="fixture-actions";
-   if(st==="planned"){
-    const b=document.createElement("button");b.className="secondary";b.textContent="Spiel aktivieren";b.onclick=()=>setFStatus(x.id,"active");actions.appendChild(b);
-   }else if(st==="active"){
-    const b=document.createElement("button");b.className="light";b.textContent="Zurück auf nicht aktiv";b.onclick=()=>setFStatus(x.id,"planned");actions.appendChild(b);
-   }else{
-    const b=document.createElement("button");b.className="light";b.textContent="Ergebnis korrigieren";b.onclick=()=>setFStatus(x.id,"active");actions.appendChild(b);
-   }
-   fixture.appendChild(actions);
-   round.appendChild(fixture);
-  });
-  fFixtures.appendChild(round);
- });
- let hg=0,gg=0,done=0;
- friendly.fixtures.forEach(x=>{if(x.result){done++;Number(x.result[0])>Number(x.result[2])?hg++:gg++}});
+ const renderOne=(x,parent)=>{
+  const st=x.status||"planned",label=st==="planned"?"○ nicht aktiv":st==="active"?"● läuft":"✓ beendet";
+  const fixture=document.createElement("div");fixture.className="fixture "+st;
+  fixture.innerHTML='<div class="fixture-head"><strong>'+x.type+'</strong><span class="fixture-status '+st+'">'+label+'</span></div>';
+  const match=document.createElement("div");match.className="fixture-match";
+  const side=(which,slots)=>{const w=document.createElement("div");w.className="side";slots.forEach((slot,pos)=>{const s=document.createElement("select");s.innerHTML=fOptions(which,slot);s.value=String(slot);s.onchange=()=>changeFPlayer(x.id,which,pos,s.value);w.appendChild(s)});return w};
+  match.appendChild(side("h",x.h));const vs=document.createElement("div");vs.className="vs";vs.textContent="gegen";match.appendChild(vs);match.appendChild(side("g",x.g));fixture.appendChild(match);
+  const score=document.createElement("div");score.className="scorebox";
+  const rs=document.createElement("select");rs.innerHTML='<option value="">Ergebnis wählen</option><option value="2:0">2:0</option><option value="2:1">2:1</option><option value="1:2">1:2</option><option value="0:2">0:2</option>';rs.value=x.result||"";rs.onchange=()=>setFResult(x.id,rs.value);score.appendChild(rs);
+  const note=document.createElement("div");note.className="note";note.textContent=x.result?"Ergebnis: "+x.result:"Noch kein Ergebnis";score.appendChild(note);fixture.appendChild(score);
+  const acts=document.createElement("div");acts.className="fixture-actions";const btn=document.createElement("button");btn.className=st==="planned"?"secondary":"light";btn.textContent=st==="planned"?"Spiel aktivieren":st==="active"?"Zurück auf nicht aktiv":"Ergebnis korrigieren";btn.onclick=()=>setFStatus(x.id,st==="planned"?"active":st==="active"?"planned":"active");acts.appendChild(btn);fixture.appendChild(acts);
+  parent.appendChild(fixture);
+ };
+ const ds=friendly.fixtures.filter(x=>x.type.startsWith("Doppel"));
+ if(ds.length){const block=document.createElement("div");block.className="round-friendly";block.innerHTML="<h3>🎯 Doppel – zuerst</h3>";ds.forEach(x=>renderOne(x,block));fFixtures.appendChild(block)}
+ [1,2,3,4].forEach(r=>{const ss=friendly.fixtures.filter(x=>x.type==="Einzel"&&x.r===r);if(!ss.length)return;const block=document.createElement("div");block.className="round-friendly";block.innerHTML="<h3>Runde "+r+" – Einzel</h3>";ss.forEach(x=>renderOne(x,block));fFixtures.appendChild(block)});
+ let hg=0,gg=0,done=0;friendly.fixtures.forEach(x=>{if(x.result){done++;Number(x.result[0])>Number(x.result[2])?hg++:gg++}});
  fHomeGames.textContent=hg;fGuestGames.textContent=gg;fDoneCount.textContent=done;
- const active=fActiveCount(),open=friendly.fixtures.length-done;
- fOverall.className="status-top "+(open?"open":"done");
+ const active=fActiveCount(),open=friendly.fixtures.length-done;fOverall.className="status-top "+(open?"open":"done");
  const leagueText=(fLeague.value==="BZ"||fLeague.value==="BZO")?"4 Doppel":"2 Doppel";
  fOverall.textContent=(open?(active?active+" Begegnung(en) aktiv · "+open+" noch nicht beendet":open+" Begegnungen noch offen"):"✓ Freundschaftsspiel vollständig beendet")+" · "+fLeague.value+" · "+leagueText;
  renderFriendlyBilling();
