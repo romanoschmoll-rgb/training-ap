@@ -101,11 +101,39 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .player-choice.winner{background:#c9efd7;border:2px solid #1f8a51;color:#13552f}
 .player-choice.loser{background:#f9d6d6;border:2px solid #b94242;color:#762121}
 .game-done .note{background:#d8f1e1;border-color:#79ba91;color:#155632}
+
+.app-switch{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.app-switch button{font-size:16px}
+.app-switch .active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.view-hidden{display:none!important}
+.friendly-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.team-card{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fafcfe}
+.roster-row{display:grid;grid-template-columns:58px 1fr;gap:8px;align-items:center;margin:7px 0}
+.roster-row strong{text-align:center}
+.fixture{border:2px solid #cbd5df;border-left-width:7px;border-radius:13px;padding:11px;margin:9px 0;background:#f2f5f7}
+.fixture.planned{border-left-color:#8996a3;background:#f2f5f7}
+.fixture.active{border-color:#d8b64b;border-left-color:#d8b64b;background:#fff8d9}
+.fixture.done{border-color:#2d9158;border-left-color:#2d9158;background:#e3f7ea}
+.fixture-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
+.fixture-status{font-weight:900;border-radius:999px;padding:4px 9px;font-size:12px}
+.fixture-status.planned{background:#dce2e7;color:#4d5964}.fixture-status.active{background:#ffe88e;color:#654c00}.fixture-status.done{background:#a8e5be;color:#155632}
+.fixture-match{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.fixture-match .side{font-weight:800;text-align:center}
+.fixture-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.scorebox{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.round-friendly{border:1px solid var(--line);border-radius:15px;padding:12px;margin:12px 0}
+.round-friendly h3{margin:0 0 8px}
+@media(max-width:700px){.friendly-grid,.fixture-match,.fixture-actions,.scorebox{grid-template-columns:1fr}.fixture-match .vs{display:none}}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters – Training <span class="version">v11</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v12</span></header>
 <main>
+<div class="app-switch no-print">
+<button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
+<button id="friendlyViewBtn" onclick="showAppView('friendly')">🤝 Freundschaftsspiel</button>
+</div>
+<div id="trainingView">
 
 <section class="card no-print">
 <h2>Trainingstag</h2>
@@ -194,10 +222,48 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </table>
 </section>
 
+</div>
+<div id="friendlyView" class="view-hidden">
+<section class="card">
+<h2>Freundschaftsspiel – A / B / C Liga</h2>
+<div class="grid3">
+<label><span class="small">Datum</span><input id="fDate" type="date"></label>
+<label><span class="small">Liga</span><select id="fLeague"><option>A</option><option>B</option><option>C</option></select></label>
+<label><span class="small">Spiel-Nr.</span><input id="fMatchNo" placeholder="z. B. 1"></label>
+</div>
+</section>
+
+<section class="card">
+<h2>1. Mannschaften & Spieler</h2>
+<div class="friendly-grid">
+<div class="team-card"><label><span class="small">Heimteam</span><input id="fHomeTeam" value="DC Hunters"></label><div id="fHomeRoster"></div></div>
+<div class="team-card"><label><span class="small">Gastteam</span><input id="fGuestTeam" placeholder="Name Gastmannschaft"></label><div id="fGuestRoster"></div></div>
+</div>
+<p class="small">H1–H4 / G1–G4 sind die Stammpositionen. Ersatzspieler können zusätzlich eingetragen und bei einzelnen Begegnungen ausgewählt werden.</p>
+<div class="actions"><button class="primary" onclick="createFriendly()">Spielplan erstellen</button><button class="danger" onclick="resetFriendly()">Freundschaftsspiel zurücksetzen</button></div>
+</section>
+
+<section class="card">
+<h2>2. Spielplan</h2>
+<div id="fOverall" class="status-top done">Noch kein Spielplan erstellt</div>
+<p class="small"><strong>Grau</strong> = noch nicht aktiv · <strong>Gelb</strong> = läuft · <strong>Grün</strong> = beendet. Maximal zwei Begegnungen können gleichzeitig aktiv sein.</p>
+<div id="fFixtures"></div>
+</section>
+
+<section class="card">
+<h2>3. Spielstand</h2>
+<div class="summary-grid">
+<div class="summary-box"><span>Heim – Spiele</span><strong id="fHomeGames">0</strong></div>
+<div class="summary-box"><span>Gast – Spiele</span><strong id="fGuestGames">0</strong></div>
+<div class="summary-box"><span>Beendete Begegnungen</span><strong id="fDoneCount">0</strong></div>
+</div>
+<div class="actions no-print" style="margin-top:12px"><button class="primary" onclick="exportFriendlyPDF()">Spielbericht als PDF</button><button class="secondary" onclick="saveFriendly()">Freundschaftsspiel speichern</button></div>
+</section>
+</div>
 </main>
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
-const STORAGE="dc-hunters-v11";
+const STORAGE="dc-hunters-v12";
 let mode="einzel";
 let state=JSON.parse(localStorage.getItem(STORAGE)||"null")||{
  players:[...basePlayers],guests:[],present:Object.fromEntries(basePlayers.map(n=>[n,true])),
@@ -222,6 +288,9 @@ function addGuest(){
  if(allPlayers().some(n=>n.toLowerCase()===name.toLowerCase())){alert("Name bereits vorhanden.");return}
  state.guests.push(name);state.present[name]=true;state.history.pauses[name]=0;input.value="";
  persist();renderAll();
+if(friendly.meta){fDate.value=friendly.meta.date||todayISO();fLeague.value=friendly.meta.league||"A";fMatchNo.value=friendly.meta.no||"";fHomeTeam.value=friendly.meta.homeTeam||"DC Hunters";fGuestTeam.value=friendly.meta.guestTeam||""}else fDate.value=todayISO();
+[fDate,fLeague,fMatchNo,fHomeTeam,fGuestTeam].forEach(x=>x.onchange=persistFriendly);
+renderFriendly();
 }
 function removeGuest(name){
  if(state.rounds.some(r=>r.games.some(g=>g.players.includes(name)))){alert("Gast ist schon in einer Runde. Erst neuen Trainingstag starten.");return}
@@ -410,7 +479,86 @@ function resetDay(){
  if(!confirm("Aktuellen Trainingstag löschen und neu starten?"))return;
  state.rounds=[];state.history={opponents:{},pauses:Object.fromEntries(allPlayers().map(n=>[n,0]))};trainingDate.value=todayISO();persist();renderAll();
 }
-function renderAll(){renderPlayers();renderRounds();renderBilling();renderHistory();renderLongTermRanking()}
+
+function showAppView(v){
+ trainingView.classList.toggle("view-hidden",v!=="training");friendlyView.classList.toggle("view-hidden",v!=="friendly");
+ trainingViewBtn.classList.toggle("active",v==="training");friendlyViewBtn.classList.toggle("active",v==="friendly");
+}
+const FRIENDLY_KEY="dc-hunters-friendly-v12";
+let friendly=JSON.parse(localStorage.getItem(FRIENDLY_KEY)||"null")||{home:["","","","","","","",""],guest:["","","","","","","",""],fixtures:[],archive:[]};
+if(!friendly.archive)friendly.archive=[];
+const fLabelsHome=["H1","H2","H3","H4","HE1","HE2","HE3","HE4"],fLabelsGuest=["G1","G2","G3","G4","GE1","GE2","GE3","GE4"];
+const fSchedule=[
+ {r:1,type:"Doppel",h:[0,1],g:[0,1]},{r:1,type:"Einzel",h:[0],g:[0]},{r:1,type:"Einzel",h:[1],g:[1]},{r:1,type:"Einzel",h:[2],g:[2]},{r:1,type:"Einzel",h:[3],g:[3]},
+ {r:2,type:"Doppel",h:[2,3],g:[2,3]},{r:2,type:"Einzel",h:[0],g:[1]},{r:2,type:"Einzel",h:[1],g:[0]},{r:2,type:"Einzel",h:[2],g:[3]},{r:2,type:"Einzel",h:[3],g:[2]},
+ {r:3,type:"Doppel",h:[0,1],g:[2,3]},{r:3,type:"Einzel",h:[0],g:[3]},{r:3,type:"Einzel",h:[1],g:[2]},{r:3,type:"Einzel",h:[2],g:[1]},{r:3,type:"Einzel",h:[3],g:[0]},
+ {r:4,type:"Doppel",h:[2,3],g:[0,1]},{r:4,type:"Einzel",h:[0],g:[2]},{r:4,type:"Einzel",h:[1],g:[3]},{r:4,type:"Einzel",h:[2],g:[0]},{r:4,type:"Einzel",h:[3],g:[1]}
+];
+function persistFriendly(){
+ friendly.home=fLabelsHome.map((_,i)=>document.getElementById("fh"+i)?.value??friendly.home[i]??"");
+ friendly.guest=fLabelsGuest.map((_,i)=>document.getElementById("fg"+i)?.value??friendly.guest[i]??"");
+ friendly.meta={date:fDate?.value||todayISO(),league:fLeague?.value||"A",no:fMatchNo?.value||"",homeTeam:fHomeTeam?.value||"",guestTeam:fGuestTeam?.value||""};
+ localStorage.setItem(FRIENDLY_KEY,JSON.stringify(friendly));
+}
+function renderFriendlyRoster(){
+ fHomeRoster.innerHTML=fLabelsHome.map((x,i)=>'<div class="roster-row"><strong>'+x+'</strong><input id="fh'+i+'" value="'+(friendly.home[i]||'')+'" placeholder="Spieler"></div>').join("");
+ fGuestRoster.innerHTML=fLabelsGuest.map((x,i)=>'<div class="roster-row"><strong>'+x+'</strong><input id="fg'+i+'" value="'+(friendly.guest[i]||'')+'" placeholder="Spieler"></div>').join("");
+ [...fHomeRoster.querySelectorAll("input"),...fGuestRoster.querySelectorAll("input")].forEach(x=>x.onchange=persistFriendly);
+}
+function friendlyNames(side){return side==="h"?friendly.home:friendly.guest}
+function fSideText(side,slots){const names=friendlyNames(side);return slots.map(i=>names[i]||((side==="h"?fLabelsHome:fLabelsGuest)[i])).join(" + ")}
+function fOptions(side,current){const names=friendlyNames(side),labels=side==="h"?fLabelsHome:fLabelsGuest;return names.map((n,i)=>'<option value="'+i+'" '+(String(i)===String(current)?"selected":"")+'>'+(n||labels[i])+' ('+labels[i]+')</option>').join("")}
+function createFriendly(){
+ persistFriendly();
+ if(!friendly.home.slice(0,4).every(Boolean)||!friendly.guest.slice(0,4).every(Boolean)){alert("Bitte mindestens H1–H4 und G1–G4 eintragen.");return}
+ friendly.fixtures=fSchedule.map((x,i)=>({id:Date.now()+i,r:x.r,type:x.type,h:[...x.h],g:[...x.g],status:"planned",result:""}));
+ persistFriendly();renderFriendly();
+}
+function fActiveCount(){return friendly.fixtures.filter(x=>x.status==="active").length}
+function setFStatus(id,status){
+ const x=friendly.fixtures.find(x=>x.id===id);if(!x)return;
+ if(status==="active"&&fActiveCount()>=2&&x.status!=="active"){alert("Es können höchstens zwei Begegnungen gleichzeitig aktiv sein.");return}
+ if(status==="done"&&!x.result){alert("Bitte zuerst ein Ergebnis eintragen.");return}
+ x.status=status;persistFriendly();renderFriendly();
+}
+function setFResult(id,val){const x=friendly.fixtures.find(x=>x.id===id);if(!x)return;x.result=val;if(val)x.status="done";persistFriendly();renderFriendly()}
+function changeFPlayer(id,side,pos,val){const x=friendly.fixtures.find(x=>x.id===id);if(!x)return;x[side][pos]=Number(val);persistFriendly();renderFriendly()}
+function renderFriendly(){
+ if(!friendly.fixtures.length){fFixtures.innerHTML='<p class="small">Noch kein Spielplan erstellt.</p>';fOverall.className="status-top done";fOverall.textContent="Noch kein Spielplan erstellt";fHomeGames.textContent=fGuestGames.textContent=fDoneCount.textContent="0";return}
+ let html="";
+ [1,2,3,4].forEach(r=>{
+  html+='<div class="round-friendly"><h3>Runde '+r+'</h3>';
+  friendly.fixtures.filter(x=>x.r===r).forEach(x=>{
+   const st=x.status||"planned",label=st==="planned"?"○ nicht aktiv":st==="active"?"● läuft":"✓ beendet";
+   const selectors=(side,arr)=>arr.map((slot,pos)=>'<select onchange="changeFPlayer('+x.id+',\\''+side+'\\','+pos+',this.value)">'+fOptions(side,slot)+'</select>').join("");
+   html+='<div class="fixture '+st+'"><div class="fixture-head"><strong>'+x.type+'</strong><span class="fixture-status '+st+'">'+label+'</span></div>'+
+   '<div class="fixture-match"><div class="side">'+selectors("h",x.h)+'</div><div class="vs">gegen</div><div class="side">'+selectors("g",x.g)+'</div></div>'+
+   '<div class="scorebox"><select onchange="setFResult('+x.id+',this.value)"><option value="">Ergebnis wählen</option>'+["2:0","2:1","1:2","0:2"].map(v=>'<option '+(x.result===v?"selected":"")+'>'+v+'</option>').join("")+'</select>'+
+   '<div class="note">'+(x.result?"Ergebnis: "+x.result:"Noch kein Ergebnis")+'</div></div>'+
+   '<div class="fixture-actions">'+(st!=="active"&&st!=="done"?'<button class="secondary" onclick="setFStatus('+x.id+',\\'active\\')">Spiel aktivieren</button>':'')+
+   (st==="active"?'<button class="light" onclick="setFStatus('+x.id+',\\'planned\\')">Zurück auf nicht aktiv</button>':'')+
+   (st==="done"?'<button class="light" onclick="setFStatus('+x.id+',\\'active\\')">Ergebnis korrigieren</button>':'')+'</div></div>';
+  });html+='</div>';
+ });
+ fFixtures.innerHTML=html;
+ let hg=0,gg=0,done=0;friendly.fixtures.forEach(x=>{if(x.result){done++;const a=Number(x.result[0]),b=Number(x.result[2]);if(a>b)hg++;else gg++}});
+ fHomeGames.textContent=hg;fGuestGames.textContent=gg;fDoneCount.textContent=done;
+ const active=fActiveCount(),open=friendly.fixtures.length-done;
+ fOverall.className="status-top "+(open?"open":"done");
+ fOverall.textContent=open?(active?active+" Begegnung(en) aktiv · "+open+" noch nicht beendet":open+" Begegnungen noch offen"):"✓ Freundschaftsspiel vollständig beendet";
+}
+function resetFriendly(){if(!confirm("Freundschaftsspiel wirklich zurücksetzen?"))return;friendly.fixtures=[];persistFriendly();renderFriendly()}
+function saveFriendly(){persistFriendly();friendly.archive.push(JSON.parse(JSON.stringify({meta:friendly.meta,home:friendly.home,guest:friendly.guest,fixtures:friendly.fixtures,saved:new Date().toISOString()})));persistFriendly();alert("✓ Freundschaftsspiel gespeichert.")}
+function friendlyPdfLines(){
+ persistFriendly();const m=friendly.meta||{},lines=["DC HUNTERS - FREUNDSCHAFTSSPIEL","Liga: "+m.league+"   Datum: "+new Date((m.date||todayISO())+"T12:00:00").toLocaleDateString("de-DE"),(m.homeTeam||"Heim")+" gegen "+(m.guestTeam||"Gast"),""];
+ [1,2,3,4].forEach(r=>{lines.push("RUNDE "+r);friendly.fixtures.filter(x=>x.r===r).forEach(x=>lines.push(x.type+": "+fSideText("h",x.h)+"  "+(x.result||"-")+"  "+fSideText("g",x.g)));lines.push("")});
+ let h=0,g=0;friendly.fixtures.forEach(x=>{if(x.result){Number(x.result[0])>Number(x.result[2])?h++:g++}});
+ lines.push("GESAMT: "+(m.homeTeam||"Heim")+" "+h+" : "+g+" "+(m.guestTeam||"Gast"));return lines;
+}
+function exportFriendlyPDF(){if(!friendly.fixtures.length){alert("Bitte zuerst einen Spielplan erstellen.");return}createSimplePDF(friendlyPdfLines(),"DC_Hunters_Freundschaft_"+(fDate.value||todayISO())+".pdf")}
+
+function renderAll(){renderPlayers();renderRounds();renderBilling();renderHistory();renderLongTermRanking();renderFriendlyRoster();renderFriendly()}
+
 trainingDate.value=state.activeDate||todayISO();trainingDate.onchange=()=>{state.activeDate=trainingDate.value;persist()};
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
 renderAll();
