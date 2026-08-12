@@ -1,15 +1,26 @@
-DC Hunters v21
+DC Hunters v22 – Trainingsarchiv separat
 
-KRITISCHER FIX:
-- Training und Freundschaftsspiel werden vor dem Öffnen einer PDF gespeichert.
-- Wenn die App durch den PDF-Viewer in den Hintergrund geht, werden beide Bereiche nochmals gespeichert.
-- Beim Zurückgehen aus der PDF dürfen die aktuellen Spielstände dadurch nicht mehr verschwinden.
-- Die vorhandenen Archive aus v20 bleiben bestehen.
+Das Trainingsarchiv ist jetzt vom laufenden Training getrennt.
 
-TEST:
-1. Training: Ergebnis eintragen -> speichern -> PDF öffnen -> zurück -> Ergebnis muss noch da sein.
-2. Training: gespeicherten Tag unter „Gespeicherte Trainingstage“ mit „Öffnen“ laden.
-3. Freundschaftsspiel: speichern -> unter „Gespeicherte Freundschaftsspiele“ mit „Öffnen“ laden.
-4. Freundschaftsspiel: PDF öffnen -> zurück -> Ergebnisse müssen noch da sein.
+Laufender Stand:
+dc-hunters-data
 
-Auf GitHub alle Dateien ersetzen. Danach muss oben v21 stehen.
+Gespeicherte Trainingstage:
+dc-hunters-training-archive
+
+Dadurch bleiben gespeicherte Trainingstage erhalten, auch wenn:
+- ein neues Training gestartet wird
+- eine PDF geöffnet wird
+- die App geschlossen und neu geöffnet wird
+
+Vorhandene Trainingstage aus dem bisherigen Speicher werden beim ersten Start übernommen.
+
+Test:
+1. Runde + Ergebnis eintragen.
+2. Trainingstag speichern.
+3. Unter „Gespeicherte Trainingstage“ muss der Tag erscheinen.
+4. Neues Training starten.
+5. Der gespeicherte Tag muss weiterhin sichtbar sein.
+6. Öffnen -> alte Runden und Ergebnisse müssen zurückkommen.
+
+Auf GitHub alle Dateien ersetzen. Danach muss oben v22 stehen.

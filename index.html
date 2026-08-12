@@ -132,7 +132,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v21</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v22</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -296,7 +296,24 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
 const STORAGE="dc-hunters-data";
-const LEGACY_KEYS=["dc-hunters-v21","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
+const TRAINING_ARCHIVE_KEY="dc-hunters-training-archive";
+function readTrainingArchive(){
+ try{
+  const data=JSON.parse(localStorage.getItem(TRAINING_ARCHIVE_KEY)||"null");
+  return Array.isArray(data)?data:[];
+ }catch(e){return [];}
+}
+function writeTrainingArchive(entries){
+ try{
+  localStorage.setItem(TRAINING_ARCHIVE_KEY,JSON.stringify(entries||[]));
+  return true;
+ }catch(e){
+  alert("Das Trainingsarchiv konnte auf diesem Gerät nicht gespeichert werden.");
+  return false;
+ }
+}
+
+const LEGACY_KEYS=["dc-hunters-v22","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
 let mode="einzel";
 
 function loadMainState(){
@@ -326,6 +343,13 @@ function loadMainState(){
 }
 let state=loadMainState();
 if(!state.archive)state.archive=[];
+const dedicatedTrainingArchive=readTrainingArchive();
+if(dedicatedTrainingArchive.length){
+ state.archive=dedicatedTrainingArchive;
+}else if(state.archive.length){
+ writeTrainingArchive(state.archive);
+}
+
 if(!state.history)state.history={opponents:{},pauses:{}};
 if(!state.players)state.players=[...basePlayers];
 if(!state.guests)state.guests=[];
@@ -520,67 +544,71 @@ function snapshot(){
  const c=calculate();return{date:trainingDate.value||todayISO(),savedAt:new Date().toISOString(),rounds:JSON.parse(JSON.stringify(state.rounds)),stats:c.players,total:Object.values(c.players).reduce((s,x)=>s+x.cost,0),completed:c.completed}
 }
 function archiveDay(){
- if(!state.rounds.length){alert("Noch keine Runden vorhanden.");return}
- if(unfinishedRounds().length&&!confirm("Es sind noch Spiele offen oder vorausgelost. Trainingstag trotzdem speichern?"))return;
+ if(!state.rounds.length){alert("Noch keine Runden vorhanden.");return;}
+ if(unfinishedRounds().length && !confirm("Es sind noch Spiele offen oder vorausgelost. Trainingstag trotzdem speichern?"))return;
 
- const snap=snapshot();
- const same=state.archive.findIndex(x=>x.date===snap.date);
- if(same>=0&&!confirm("Für dieses Datum existiert bereits ein gespeicherter Trainingstag. Ersetzen?"))return;
- if(same>=0)state.archive.splice(same,1);
+ const snap=JSON.parse(JSON.stringify(snapshot()));
+ let archive=readTrainingArchive();
+ const same=archive.findIndex(x=>x.date===snap.date);
 
- state.archive.unshift(snap);
- if(!persist())return;
+ if(same>=0 && !confirm("Für dieses Datum existiert bereits ein gespeicherter Trainingstag. Ersetzen?"))return;
+ if(same>=0)archive.splice(same,1);
 
- // Sofort aus dem echten Gerätespeicher zurücklesen und prüfen.
- try{
-   const verify=JSON.parse(localStorage.getItem(STORAGE)||"null");
-   if(!verify || !Array.isArray(verify.archive) || !verify.archive.some(x=>x.date===snap.date)){
-     alert("Der Trainingstag konnte nicht dauerhaft gespeichert werden.");
-     return;
-   }
- }catch(e){
-   alert("Der Trainingstag konnte nicht überprüft werden.");
-   return;
+ archive.unshift(snap);
+ if(!writeTrainingArchive(archive))return;
+
+ state.archive=readTrainingArchive();
+ persist();
+
+ if(!state.archive.some(x=>x.date===snap.date)){
+  alert("Der Trainingstag konnte nicht dauerhaft gespeichert werden.");
+  return;
  }
-
  renderHistory();
  renderLongTermRanking();
- alert("✓ Trainingstag "+new Date(snap.date+"T12:00:00").toLocaleDateString("de-DE")+" wurde dauerhaft auf diesem Gerät gespeichert.");
+ alert("✓ Trainingstag wurde im Trainingsarchiv gespeichert.");
 }
 function renderHistory(){
+ state.archive=readTrainingArchive();
  archiveCount.textContent=state.archive.length;
- history.innerHTML=state.archive.length?"":'<p class="small">Noch keine Trainingstage gespeichert.</p>';
+ history.innerHTML="";
+ if(!state.archive.length){
+  history.innerHTML='<p class="small">Noch keine Trainingstage gespeichert.</p>';
+  return;
+ }
  state.archive.forEach((x,i)=>{
-   const d=document.createElement("div");
-   d.className="history-item";
-   d.innerHTML='<div class="history-head"><div><strong>'+
-     new Date(x.date+"T12:00:00").toLocaleDateString("de-DE")+
-     '</strong><div class="small">✓ gespeichert · '+x.completed+' Partien · '+euro(x.total)+'</div></div><div>'+
-     '<button class="light" onclick="loadArchive('+i+')">Öffnen</button> '+
-     '<button class="secondary" onclick="exportArchivePDF('+i+')">PDF öffnen</button> '+
-     '<button class="danger" onclick="deleteArchive('+i+')">Löschen</button>'+
-     '</div></div>';
-   history.appendChild(d);
+  const d=document.createElement("div");
+  d.className="history-item";
+  d.innerHTML='<div class="history-head"><div><strong>'+
+   new Date(x.date+"T12:00:00").toLocaleDateString("de-DE")+
+   '</strong><div class="small">✓ gespeichert · '+x.completed+' Partien · '+euro(x.total)+'</div></div><div>'+
+   '<button class="light" onclick="loadArchive('+i+')">Öffnen</button> '+
+   '<button class="secondary" onclick="exportArchivePDF('+i+')">PDF öffnen</button> '+
+   '<button class="danger" onclick="deleteArchive('+i+')">Löschen</button>'+
+   '</div></div>';
+  history.appendChild(d);
  });
 }
 function loadArchive(i){
- const x=state.archive[i];
+ const archive=readTrainingArchive();
+ const x=archive[i];
  if(!x){alert("Gespeicherter Trainingstag wurde nicht gefunden.");return;}
  if(!confirm("Diesen gespeicherten Trainingstag öffnen?"))return;
 
  state.rounds=JSON.parse(JSON.stringify(x.rounds||[]));
  state.activeDate=x.date||todayISO();
  trainingDate.value=state.activeDate;
+ state.archive=archive;
 
  const names=new Set();
  Object.keys(x.stats||{}).forEach(n=>names.add(n));
  (x.rounds||[]).forEach(r=>{
-   (r.games||[]).forEach(g=>(g.players||[]).forEach(n=>names.add(n)));
-   (r.pauses||[]).forEach(n=>names.add(n));
+  (r.games||[]).forEach(g=>(g.players||[]).forEach(n=>names.add(n)));
+  (r.pauses||[]).forEach(n=>names.add(n));
  });
  names.forEach(n=>{
-   if(!state.players.includes(n)&&!state.guests.includes(n))state.guests.push(n);
-   if(!(n in state.present))state.present[n]=true;
+  if(!state.players.includes(n)&&!state.guests.includes(n))state.guests.push(n);
+  if(!(n in state.present))state.present[n]=true;
  });
 
  rebuildHistory();
@@ -589,8 +617,18 @@ function loadArchive(i){
  window.scrollTo({top:0,behavior:"smooth"});
  alert("✓ Gespeicherter Trainingstag wurde geöffnet.");
 }
-function deleteArchive(i){if(confirm("Gespeicherten Trainingstag löschen?")){state.archive.splice(i,1);persist();renderHistory();renderLongTermRanking()}}
+function deleteArchive(i){
+ if(!confirm("Gespeicherten Trainingstag löschen?"))return;
+ const archive=readTrainingArchive();
+ archive.splice(i,1);
+ if(!writeTrainingArchive(archive))return;
+ state.archive=archive;
+ persist();
+ renderHistory();
+ renderLongTermRanking();
+}
 function renderLongTermRanking(){
+ state.archive=readTrainingArchive();
  const now=new Date(),period=rankingPeriod.value,agg={};
  state.archive.filter(x=>{
   const d=new Date(x.date+"T12:00:00");
@@ -730,7 +768,13 @@ async function createSimplePDF(lines,filename){
  setTimeout(()=>URL.revokeObjectURL(url),300000);
 }
 async function exportCurrentPDF(){persist();const snap=JSON.parse(JSON.stringify(snapshot()));await createSimplePDF(pdfLinesFromSnapshot(snap),"DC_Hunters_"+snap.date+".pdf")}
-async function exportArchivePDF(i){const snap=state.archive[i];if(snap)await createSimplePDF(pdfLinesFromSnapshot(snap),"DC_Hunters_"+snap.date+".pdf")}
+async function exportArchivePDF(i){
+ const archive=readTrainingArchive();
+ const snap=archive[i];
+ if(!snap){alert("Gespeicherter Trainingstag wurde nicht gefunden.");return;}
+ const copy=JSON.parse(JSON.stringify(snap));
+ await createSimplePDF(pdfLinesFromSnapshot(copy),"DC_Hunters_Training_"+copy.date+".pdf");
+}
 function resetDay(){
  if(!confirm("Aktuellen Trainingstag löschen und neu starten?"))return;
  state.rounds=[];state.history={opponents:{},pauses:Object.fromEntries(allPlayers().map(n=>[n,0]))};trainingDate.value=todayISO();persist();renderAll();
