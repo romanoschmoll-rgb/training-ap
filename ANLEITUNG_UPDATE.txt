@@ -1,15 +1,15 @@
-DC Hunters v20 – Archive repariert
+DC Hunters v21
 
-TRAINING:
-- „Trainingstag speichern“ legt den Tag im Archiv ab.
-- Im Bereich „Gespeicherte Trainingstage“ gibt es Öffnen / PDF öffnen / Löschen.
-- „Öffnen“ stellt Datum, Runden, Ergebnisse, Pausen und beteiligte Spieler wieder her.
+KRITISCHER FIX:
+- Training und Freundschaftsspiel werden vor dem Öffnen einer PDF gespeichert.
+- Wenn die App durch den PDF-Viewer in den Hintergrund geht, werden beide Bereiche nochmals gespeichert.
+- Beim Zurückgehen aus der PDF dürfen die aktuellen Spielstände dadurch nicht mehr verschwinden.
+- Die vorhandenen Archive aus v20 bleiben bestehen.
 
-FREUNDSCHAFTSSPIEL:
-- Neuer sichtbarer Bereich „Gespeicherte Freundschaftsspiele“.
-- Anzeige: Datum, Gegner, Liga, Ergebnis.
-- Öffnen / PDF öffnen / Löschen.
-- Beim Öffnen werden Spieler, Auswechslungen und Ergebnisse wiederhergestellt.
+TEST:
+1. Training: Ergebnis eintragen -> speichern -> PDF öffnen -> zurück -> Ergebnis muss noch da sein.
+2. Training: gespeicherten Tag unter „Gespeicherte Trainingstage“ mit „Öffnen“ laden.
+3. Freundschaftsspiel: speichern -> unter „Gespeicherte Freundschaftsspiele“ mit „Öffnen“ laden.
+4. Freundschaftsspiel: PDF öffnen -> zurück -> Ergebnisse müssen noch da sein.
 
-Die Daten bleiben lokal auf dem jeweiligen Gerät.
-Auf GitHub alle Dateien ersetzen. Danach muss oben v20 stehen.
+Auf GitHub alle Dateien ersetzen. Danach muss oben v21 stehen.

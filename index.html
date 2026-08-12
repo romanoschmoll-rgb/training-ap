@@ -132,7 +132,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v20</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v21</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -296,7 +296,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <script>
 const basePlayers=["Romano","Bernd","Dominik","Lillo","Kay","Angi","Sebastian","Marius","Lars","Ingo"];
 const STORAGE="dc-hunters-data";
-const LEGACY_KEYS=["dc-hunters-v20","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
+const LEGACY_KEYS=["dc-hunters-v21","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
 let mode="einzel";
 
 function loadMainState(){
@@ -729,7 +729,7 @@ async function createSimplePDF(lines,filename){
  // Blob-URL lange genug behalten, damit mobile PDF-Viewer sie sicher laden können.
  setTimeout(()=>URL.revokeObjectURL(url),300000);
 }
-async function exportCurrentPDF(){const snap=snapshot();await createSimplePDF(pdfLinesFromSnapshot(snap),"DC_Hunters_"+snap.date+".pdf")}
+async function exportCurrentPDF(){persist();const snap=JSON.parse(JSON.stringify(snapshot()));await createSimplePDF(pdfLinesFromSnapshot(snap),"DC_Hunters_"+snap.date+".pdf")}
 async function exportArchivePDF(i){const snap=state.archive[i];if(snap)await createSimplePDF(pdfLinesFromSnapshot(snap),"DC_Hunters_"+snap.date+".pdf")}
 function resetDay(){
  if(!confirm("Aktuellen Trainingstag löschen und neu starten?"))return;
@@ -989,7 +989,7 @@ function friendlyPdfLines(){
  lines.push("Gesamtsumme: "+euro(sum));
  return lines;
 }
-async function exportFriendlyPDF(){if(!friendly.fixtures.length){alert("Bitte zuerst einen Spielplan erstellen.");return}await createSimplePDF(friendlyPdfLines(),"DC_Hunters_Freundschaft_"+(fDate.value||todayISO())+".pdf")}
+async function exportFriendlyPDF(){if(!friendly.fixtures.length){alert("Bitte zuerst einen Spielplan erstellen.");return}persistFriendly();await createSimplePDF(friendlyPdfLines(),"DC_Hunters_Freundschaft_"+(fDate.value||todayISO())+".pdf")}
 
 function renderAll(){renderPlayers();renderRounds();renderBilling();renderHistory();renderLongTermRanking();renderFriendlyRoster();renderFriendly();renderFriendlyArchive()}
 
@@ -1015,6 +1015,17 @@ fLeague.onchange=()=>{
 };
 showAppView("training");
 renderAll();
+
+window.addEventListener("pagehide",function(){
+ try{persist();}catch(e){}
+ try{persistFriendly();}catch(e){}
+});
+document.addEventListener("visibilitychange",function(){
+ if(document.visibilityState==="hidden"){
+  try{persist();}catch(e){}
+  try{persistFriendly();}catch(e){}
+ }
+});
 </script>
 </body>
 </html>
