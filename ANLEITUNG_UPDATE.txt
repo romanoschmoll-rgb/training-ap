@@ -1,26 +1,19 @@
-DC Hunters v22 – Trainingsarchiv separat
+DC Hunters v23 – Anzeige gespeicherter Trainingstage repariert
 
-Das Trainingsarchiv ist jetzt vom laufenden Training getrennt.
+Gefundene Ursache:
+Der Bereich hatte die HTML-ID „history“. Browser besitzen selbst bereits ein Objekt namens „history“.
+Dadurch schrieb die App die gespeicherten Trainingstage nicht zuverlässig in den sichtbaren Bereich 7.
 
-Laufender Stand:
-dc-hunters-data
-
-Gespeicherte Trainingstage:
-dc-hunters-training-archive
-
-Dadurch bleiben gespeicherte Trainingstage erhalten, auch wenn:
-- ein neues Training gestartet wird
-- eine PDF geöffnet wird
-- die App geschlossen und neu geöffnet wird
-
-Vorhandene Trainingstage aus dem bisherigen Speicher werden beim ersten Start übernommen.
+Reparatur:
+- Bereich 7 wird jetzt immer ausdrücklich über document.getElementById("history") angesprochen.
+- Der Zähler wird ebenfalls ausdrücklich angesprochen.
+- Das getrennte Trainingsarchiv aus v22 bleibt unverändert erhalten.
+- Freundschaftsspiel wurde nicht verändert.
 
 Test:
-1. Runde + Ergebnis eintragen.
+1. Training spielen.
 2. Trainingstag speichern.
-3. Unter „Gespeicherte Trainingstage“ muss der Tag erscheinen.
-4. Neues Training starten.
-5. Der gespeicherte Tag muss weiterhin sichtbar sein.
-6. Öffnen -> alte Runden und Ergebnisse müssen zurückkommen.
+3. Direkt unter Punkt 7 muss sofort ein Eintrag erscheinen.
+4. Dort stehen Öffnen / PDF öffnen / Löschen.
 
-Auf GitHub alle Dateien ersetzen. Danach muss oben v22 stehen.
+Auf GitHub alle Dateien ersetzen. Danach muss oben v23 stehen.

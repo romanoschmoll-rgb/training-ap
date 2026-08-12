@@ -132,7 +132,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v22</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v23</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -206,7 +206,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </section>
 
 <section class="card history-card no-print">
-<h2>7. Gespeicherte Trainingstage</h2>
+<h2>7. Gespeicherte Trainingstage</h2><p class="small">Hier erscheinen deine gespeicherten Trainingstage mit Öffnen, PDF und Löschen.</p>
 <div id="history"></div>
 </section>
 
@@ -313,7 +313,7 @@ function writeTrainingArchive(entries){
  }
 }
 
-const LEGACY_KEYS=["dc-hunters-v22","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
+const LEGACY_KEYS=["dc-hunters-v23","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
 let mode="einzel";
 
 function loadMainState(){
@@ -570,12 +570,19 @@ function archiveDay(){
 }
 function renderHistory(){
  state.archive=readTrainingArchive();
- archiveCount.textContent=state.archive.length;
- history.innerHTML="";
+
+ const historyBox=document.getElementById("history");
+ const countBox=document.getElementById("archiveCount");
+ if(!historyBox)return;
+
+ if(countBox)countBox.textContent=state.archive.length;
+ historyBox.innerHTML="";
+
  if(!state.archive.length){
-  history.innerHTML='<p class="small">Noch keine Trainingstage gespeichert.</p>';
+  historyBox.innerHTML='<p class="small">Noch keine Trainingstage gespeichert.</p>';
   return;
  }
+
  state.archive.forEach((x,i)=>{
   const d=document.createElement("div");
   d.className="history-item";
@@ -586,7 +593,7 @@ function renderHistory(){
    '<button class="secondary" onclick="exportArchivePDF('+i+')">PDF öffnen</button> '+
    '<button class="danger" onclick="deleteArchive('+i+')">Löschen</button>'+
    '</div></div>';
-  history.appendChild(d);
+  historyBox.appendChild(d);
  });
 }
 function loadArchive(i){
