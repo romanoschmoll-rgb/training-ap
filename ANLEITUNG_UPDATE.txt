@@ -1,19 +1,12 @@
-DC Hunters v23 – Anzeige gespeicherter Trainingstage repariert
+DC Hunters v24 – Zahlungen und Mannschaftskasse
 
-Gefundene Ursache:
-Der Bereich hatte die HTML-ID „history“. Browser besitzen selbst bereits ein Objekt namens „history“.
-Dadurch schrieb die App die gespeicherten Trainingstage nicht zuverlässig in den sichtbaren Bereich 7.
+Trainingsabrechnung:
+- Soll = Betrag laut Spielen
+- Bezahlt = tatsächlich gegebenen Betrag manuell eintragen
+- Mannschaftskasse = automatisch Bezahlt minus Soll, wenn positiv
 
-Reparatur:
-- Bereich 7 wird jetzt immer ausdrücklich über document.getElementById("history") angesprochen.
-- Der Zähler wird ebenfalls ausdrücklich angesprochen.
-- Das getrennte Trainingsarchiv aus v22 bleibt unverändert erhalten.
-- Freundschaftsspiel wurde nicht verändert.
+Beispiel:
+Soll 6,00 EUR / Bezahlt 10,00 EUR / Mannschaftskasse 4,00 EUR
 
-Test:
-1. Training spielen.
-2. Trainingstag speichern.
-3. Direkt unter Punkt 7 muss sofort ein Eintrag erscheinen.
-4. Dort stehen Öffnen / PDF öffnen / Löschen.
-
-Auf GitHub alle Dateien ersetzen. Danach muss oben v23 stehen.
+Die Werte werden mit dem Trainingstag gespeichert, beim Öffnen wiederhergestellt und in die PDF übernommen.
+Freundschaftsspiel bleibt unverändert.

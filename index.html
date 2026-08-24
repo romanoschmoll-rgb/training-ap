@@ -129,10 +129,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .round-state.next,.game-status.next{background:#d8eaf8;color:#194b73}
 .game.game-next{background:#f0f7fc;border-left:7px solid #4d85b5}
 .next-banner{background:#dcecf8;border:1px solid #7ba8ca;color:#194b73;border-radius:12px;padding:10px 12px;margin:8px 0;font-weight:900;text-align:center}
+
+.pay-input{width:92px;min-height:38px;padding:6px 8px;border:1px solid var(--line);border-radius:9px;text-align:right;font-weight:800}
+.extra-positive{color:#17663a;font-weight:900}
+@media(max-width:760px){.pay-input{width:78px;font-size:14px}}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v23</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v24</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -187,11 +191,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </section>
 
 <section class="card">
-<h2>5. Tagesrangliste & Abrechnung</h2>
+<h2>5. Tagesrangliste & Abrechnung</h2><p class="small">Bei „Bezahlt“ trägst du ein, was der Spieler tatsächlich gegeben hat. Alles über dem Soll wird automatisch als Mannschaftskasse gerechnet.</p>
 <table>
-<thead><tr><th>Rang</th><th>Spieler</th><th>Spiele</th><th>S</th><th>N</th><th>Legs</th><th>Quote</th><th>Pausen</th><th class="money">Gesamt</th></tr></thead>
+<thead><tr><th>Rang</th><th>Spieler</th><th>Spiele</th><th>S</th><th>N</th><th>Legs</th><th>Quote</th><th>Pausen</th><th class="money">Soll</th><th class="money">Bezahlt</th><th class="money">Mannschaftskasse</th></tr></thead>
 <tbody id="billing"></tbody>
-<tfoot><tr><th colspan="8">Gesamteinnahmen</th><th id="grandTotal" class="money">0,00 €</th></tr></tfoot>
+<tfoot>
+<tr><th colspan="8">Soll aus Spielen</th><th id="grandTotal" class="money">0,00 €</th><th></th><th></th></tr>
+<tr><th colspan="9">Tatsächlich bezahlt</th><th id="paidTotal" class="money">0,00 €</th><th></th></tr>
+<tr><th colspan="10">Davon Mannschaftskasse</th><th id="teamCashTotal" class="money">0,00 €</th></tr>
+</tfoot>
 </table>
 </section>
 
@@ -313,7 +321,7 @@ function writeTrainingArchive(entries){
  }
 }
 
-const LEGACY_KEYS=["dc-hunters-v23","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
+const LEGACY_KEYS=["dc-hunters-v24","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
 let mode="einzel";
 
 function loadMainState(){
@@ -351,6 +359,7 @@ if(dedicatedTrainingArchive.length){
 }
 
 if(!state.history)state.history={opponents:{},pauses:{}};
+if(!state.payments)state.payments={};
 if(!state.players)state.players=[...basePlayers];
 if(!state.guests)state.guests=[];
 if(!state.present)state.present=Object.fromEntries(allPlayers().map(n=>[n,true]));
@@ -528,10 +537,51 @@ function calculate(){
 function rankedRows(data){
  return Object.entries(data).sort((a,b)=>(b[1].wins-a[1].wins)||((b[1].games?b[1].wins/b[1].games:0)-(a[1].games?a[1].wins/a[1].games:0))||(b[1].games-a[1].games)||a[0].localeCompare(b[0]));
 }
+
+function setActualPayment(name,value){
+ const normalized=String(value).replace(",",".").trim();
+ let amount=parseFloat(normalized);
+ if(!Number.isFinite(amount)||amount<0)amount=0;
+ state.payments[name]=Math.round(amount*100)/100;
+ persist();
+ renderBilling();
+}
+function actualPayment(name){
+ const v=Number(state.payments&&state.payments[name]);
+ return Number.isFinite(v)&&v>=0?v:0;
+}
 function renderBilling(){
- const c=calculate(),rows=rankedRows(c.players);billing.innerHTML="";let total=0;
- rows.forEach(([n,x],i)=>{total+=x.cost;const q=x.games?Math.round(x.wins/x.games*100):0,tr=document.createElement("tr");if(i<3)tr.className="rank"+(i+1);tr.innerHTML='<td>'+(i+1)+'</td><td>'+n+'</td><td>'+x.games+'</td><td>'+x.wins+'</td><td>'+x.losses+'</td><td>'+x.legs+'</td><td>'+q+'%</td><td>'+x.pauses+'</td><td class="money"><b>'+euro(x.cost)+'</b></td>';billing.appendChild(tr)});
- grandTotal.textContent=euro(total);summaryMoney.textContent=euro(total);summaryMatches.textContent=c.completed;summaryRounds.textContent=state.rounds.length;
+ const c=calculate(),rows=rankedRows(c.players);
+ billing.innerHTML="";
+ let total=0,paidSum=0,teamCashSum=0;
+
+ rows.forEach(([n,x],i)=>{
+  total+=x.cost;
+  const paid=actualPayment(n);
+  const extra=Math.max(0,paid-x.cost);
+  paidSum+=paid;
+  teamCashSum+=extra;
+  const q=x.games?Math.round(x.wins/x.games*100):0;
+  const tr=document.createElement("tr");
+  if(i<3)tr.className="rank"+(i+1);
+
+  tr.innerHTML=
+   '<td>'+(i+1)+'</td><td>'+n+'</td><td>'+x.games+'</td><td>'+x.wins+'</td><td>'+x.losses+'</td><td>'+x.legs+'</td><td>'+q+'%</td><td>'+x.pauses+'</td>'+
+   '<td class="money"><b>'+euro(x.cost)+'</b></td>'+
+   '<td class="money"><input class="pay-input" inputmode="decimal" type="number" min="0" step="0.50" value="'+(paid?paid.toFixed(2):'')+'" placeholder="0,00"></td>'+
+   '<td class="money '+(extra>0?'extra-positive':'')+'">'+euro(extra)+'</td>';
+
+  tr.querySelector(".pay-input").onchange=e=>setActualPayment(n,e.target.value);
+  billing.appendChild(tr);
+ });
+
+ grandTotal.textContent=euro(total);
+ if(typeof paidTotal!=="undefined")paidTotal.textContent=euro(paidSum);
+ if(typeof teamCashTotal!=="undefined")teamCashTotal.textContent=euro(teamCashSum);
+ summaryMoney.textContent=euro(total);
+ summaryMatches.textContent=c.completed;
+ summaryRounds.textContent=state.rounds.length;
+
  const unfinished=unfinishedRounds(),open=unfinished.length>0;
  overallStatus.className="status-top "+(open?"open":"done");
  if(!state.rounds.length)overallStatus.textContent="Noch keine Runde gestartet";
@@ -541,7 +591,16 @@ function renderBilling(){
  drawBtn.disabled=unfinished.length>=2;
 }
 function snapshot(){
- const c=calculate();return{date:trainingDate.value||todayISO(),savedAt:new Date().toISOString(),rounds:JSON.parse(JSON.stringify(state.rounds)),stats:c.players,total:Object.values(c.players).reduce((s,x)=>s+x.cost,0),completed:c.completed}
+ const c=calculate();
+ return{
+  date:trainingDate.value||todayISO(),
+  savedAt:new Date().toISOString(),
+  rounds:JSON.parse(JSON.stringify(state.rounds)),
+  stats:c.players,
+  payments:JSON.parse(JSON.stringify(state.payments||{})),
+  total:Object.values(c.players).reduce((s,x)=>s+x.cost,0),
+  completed:c.completed
+ };
 }
 function archiveDay(){
  if(!state.rounds.length){alert("Noch keine Runden vorhanden.");return;}
@@ -568,6 +627,17 @@ function archiveDay(){
  renderLongTermRanking();
  alert("✓ Trainingstag wurde im Trainingsarchiv gespeichert.");
 }
+
+function archivePaymentSummary(x){
+ let paid=0,extra=0;
+ const pays=x.payments||{};
+ Object.entries(x.stats||{}).forEach(([n,s])=>{
+  const p=Number(pays[n]||0);
+  paid+=p;
+  extra+=Math.max(0,p-Number(s.cost||0));
+ });
+ return{paid,extra};
+}
 function renderHistory(){
  state.archive=readTrainingArchive();
 
@@ -588,7 +658,7 @@ function renderHistory(){
   d.className="history-item";
   d.innerHTML='<div class="history-head"><div><strong>'+
    new Date(x.date+"T12:00:00").toLocaleDateString("de-DE")+
-   '</strong><div class="small">✓ gespeichert · '+x.completed+' Partien · '+euro(x.total)+'</div></div><div>'+
+   '</strong><div class="small">✓ gespeichert · '+x.completed+' Partien · Soll '+euro(x.total)+' · Bezahlt '+euro(archivePaymentSummary(x).paid)+' · Kasse '+euro(archivePaymentSummary(x).extra)+'</div></div><div>'+
    '<button class="light" onclick="loadArchive('+i+')">Öffnen</button> '+
    '<button class="secondary" onclick="exportArchivePDF('+i+')">PDF öffnen</button> '+
    '<button class="danger" onclick="deleteArchive('+i+')">Löschen</button>'+
@@ -603,6 +673,7 @@ function loadArchive(i){
  if(!confirm("Diesen gespeicherten Trainingstag öffnen?"))return;
 
  state.rounds=JSON.parse(JSON.stringify(x.rounds||[]));
+ state.payments=JSON.parse(JSON.stringify(x.payments||{}));
  state.activeDate=x.date||todayISO();
  trainingDate.value=state.activeDate;
  state.archive=archive;
@@ -652,8 +723,30 @@ function renderLongTermRanking(){
 function pdfEscape(s){return String(s).replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)").replace(/[äÄ]/g,"ae").replace(/[öÖ]/g,"oe").replace(/[üÜ]/g,"ue").replace(/ß/g,"ss").replace(/€/g,"EUR")}
 function pdfLinesFromSnapshot(snap){
  const lines=["DC HUNTERS - TRAININGSBERICHT","Trainingstag: "+new Date(snap.date+"T12:00:00").toLocaleDateString("de-DE"),"","SPIELE"];
- snap.rounds.forEach((r,ri)=>{lines.push("Runde "+(ri+1)+" - "+(r.mode==="einzel"?"Einzel":"Doppel"));r.games.forEach((g,gi)=>{let a,b;if(r.mode==="einzel"){a=g.players[0];b=g.players[1]}else{a=g.players[0]+" + "+g.players[1];b=g.players[2]+" + "+g.players[3]}lines.push("  Automat "+(gi+1)+": "+a+"  "+(g.result||"-")+"  "+b)});if(r.pauses.length)lines.push("  Pause: "+r.pauses.join(", "));lines.push("")});
- lines.push("ABRECHNUNG / STATISTIK");rankedRows(snap.stats).forEach(([n,x],i)=>{const q=x.games?Math.round(x.wins/x.games*100):0;lines.push((i+1)+". "+n+" | Spiele "+x.games+" | Siege "+x.wins+" | Niederl. "+x.losses+" | Quote "+q+"% | "+euro(x.cost))});lines.push("","Gesamteinnahmen: "+euro(snap.total));return lines;
+ snap.rounds.forEach((r,ri)=>{
+  lines.push("Runde "+(ri+1)+" - "+(r.mode==="einzel"?"Einzel":"Doppel"));
+  r.games.forEach((g,gi)=>{
+   let a,b;
+   if(r.mode==="einzel"){a=g.players[0];b=g.players[1]}
+   else{a=g.players[0]+" + "+g.players[1];b=g.players[2]+" + "+g.players[3]}
+   lines.push("  Automat "+(gi+1)+": "+a+"  "+(g.result||"-")+"  "+b);
+  });
+  if(r.pauses.length)lines.push("  Pause: "+r.pauses.join(", "));
+  lines.push("");
+ });
+ lines.push("ABRECHNUNG / STATISTIK");
+ let paidSum=0,teamCashSum=0;
+ const pays=snap.payments||{};
+ rankedRows(snap.stats).forEach(([n,x],i)=>{
+  const q=x.games?Math.round(x.wins/x.games*100):0;
+  const paid=Number(pays[n]||0);
+  const extra=Math.max(0,paid-x.cost);
+  paidSum+=paid;
+  teamCashSum+=extra;
+  lines.push((i+1)+". "+n+" | Spiele "+x.games+" | Siege "+x.wins+" | Quote "+q+"% | Soll "+euro(x.cost)+" | Bezahlt "+euro(paid)+" | Kasse "+euro(extra));
+ });
+ lines.push("","Soll aus Spielen: "+euro(snap.total),"Tatsaechlich bezahlt: "+euro(paidSum),"Davon Mannschaftskasse: "+euro(teamCashSum));
+ return lines;
 }
 async function createSimplePDF(lines,filename){
  const enc=new TextEncoder();
@@ -784,7 +877,7 @@ async function exportArchivePDF(i){
 }
 function resetDay(){
  if(!confirm("Aktuellen Trainingstag löschen und neu starten?"))return;
- state.rounds=[];state.history={opponents:{},pauses:Object.fromEntries(allPlayers().map(n=>[n,0]))};trainingDate.value=todayISO();persist();renderAll();
+ state.rounds=[];state.payments={};state.history={opponents:{},pauses:Object.fromEntries(allPlayers().map(n=>[n,0]))};trainingDate.value=todayISO();persist();renderAll();
 }
 
 function showAppView(v){
