@@ -1,15 +1,18 @@
-DC Hunters v26 – Freier Automat
+DC Hunters v27 – Runde 2 trotz laufendem Doppel
 
-NEU:
-- Spiele laufen jetzt pro Automat weiter, nicht mehr nur als komplette Runde.
-- Wenn z.B. Automat 1 noch Doppel spielt und Automat 2 sein Einzel beendet hat,
-  erscheint bei Automat 2:
-  „Neues Einzel auf Automat 2 starten“.
-- Die App nimmt dafür zwei Spieler, die aktuell in keinem offenen Spiel gebunden sind.
-- Bei 6 Spielern können die zwei Einzelspieler also direkt ein weiteres Einzel spielen,
-  während das Doppel weiterläuft.
-- Der neue Spielstand zählt normal in Statistik, Abrechnung, Zahlungen, Archiv und PDF.
-- Spieler dürfen in späteren, bereits nachgelegten Spielen erneut vorkommen.
-- Ein Spieler kann aber nicht gleichzeitig auf zwei Automaten eingesetzt werden.
+WICHTIGE LOGIKÄNDERUNG:
+- Die App wartet nicht mehr auf das Ende der kompletten Runde.
+- Sobald mindestens ein Automat frei ist, kann sofort neu ausgelost werden.
+- Läuft auf Automat 1 noch ein Doppel und Automat 2 ist frei, kann Runde 2 / die nächste Partie direkt auf Automat 2 gestartet werden.
+- Es werden nur Spieler berücksichtigt, die gerade in keinem offenen Spiel gebunden sind.
+- Ein Spieler kann niemals gleichzeitig auf zwei Automaten spielen.
+- Wenn beide Automaten frei sind, können wieder bis zu zwei Spiele ausgelost werden.
+- Im Modus Gemischt/frei wird bei nur einem freien Automaten standardmäßig ein Einzel vorgeschlagen.
+- Statistik, Abrechnung, Zahlungen, Archiv und PDF bleiben erhalten.
 
-Der flexible Modus „Gemischt / frei“ bleibt erhalten.
+Beispiel mit 6 Spielern:
+Automat 1: Doppel läuft weiter.
+Automat 2: Einzel ist fertig.
+=> Button bleibt aktiv.
+=> Nächste Partie wird sofort auf Automat 2 ausgelost.
+=> Kein Warten auf das Doppel mehr.

@@ -143,7 +143,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v26</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v27</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -178,7 +178,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button id="mixedBtn" class="tab" onclick="setMode('mixed')">Gemischt / frei</button>
 </div>
 <div class="actions" style="margin-top:10px">
-<button id="drawBtn" class="primary" onclick="drawRound()">Runde auslosen / vorauslosen</button>
+<button id="drawBtn" class="primary" onclick="drawRound()">Nächste freie Partie / Runde auslosen</button>
 <button class="light" onclick="undoRound()">Letzte Runde löschen</button>
 </div>
 <p class="small"><strong>Zwei Automaten:</strong> Im Modus „Gemischt / frei“ kannst du pro Automat Einzel oder Doppel wählen und die Spieler danach individuell ändern. Bei 6 Spielern kann die App automatisch 1 Doppel + 1 Einzel vorschlagen. Wird ein Automat früher frei, kannst du dort sofort ein weiteres Einzel starten, ohne auf das andere Spiel zu warten.</p>
@@ -329,7 +329,7 @@ function writeTrainingArchive(entries){
  }
 }
 
-const LEGACY_KEYS=["dc-hunters-v26","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
+const LEGACY_KEYS=["dc-hunters-v27","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
 let mode="einzel";
 
 function loadMainState(){
@@ -537,33 +537,112 @@ function addSingleOnFreeMachine(roundId,machine){
  persist();
  renderAll();
 }
+
+function openGames(){
+ const out=[];
+ state.rounds.forEach((r,ri)=>(r.games||[]).forEach((g,gi)=>{
+  if(!g.result)out.push({round:r,roundIndex:ri,game:g,gameIndex:gi,machine:gameMachine(g,gi)});
+ }));
+ return out;
+}
+function busyMachines(){
+ return new Set(openGames().map(x=>Number(x.machine)));
+}
+function freeMachines(){
+ const busy=busyMachines();
+ return [1,2].filter(m=>!busy.has(m));
+}
+function freeTrainingPlayers(){
+ const busy=activeTrainingPlayers();
+ return allPlayers().filter(n=>state.present[n]!==false&&!busy.has(n));
+}
 function drawRound(){
- if(unfinishedRounds().length>=2){
-  alert("Aktuelle Runde und nächste Runde sind bereits vorbereitet.");
+ const machines=freeMachines();
+ if(!machines.length){
+  alert("Beide Automaten sind noch belegt. Sobald ein Automat frei ist, kannst du die nächste Runde auslosen.");
   return;
  }
- const present=allPlayers().filter(n=>state.present[n]!==false);
 
- if(mode==="einzel"&&present.length<2){alert("Mindestens 2 Spieler nötig.");return;}
- if(mode==="doppel"&&present.length<4){alert("Mindestens 4 Spieler nötig.");return;}
- if(mode==="mixed"&&present.length<2){alert("Mindestens 2 Spieler nötig.");return;}
+ const present=freeTrainingPlayers();
 
- let games=[],pauses=[];
-
- if(mode==="einzel"){
-  const x=bestPairing(present);
-  games=x.pairs.map((p,i)=>({type:"einzel",players:p,result:"",machine:i+1}));
-  pauses=x.pauses;
- }else if(mode==="doppel"){
-  const x=bestDoubles(present);
-  games=x.games.map((g,i)=>({type:"doppel",players:g,result:"",machine:i+1}));
-  pauses=x.pauses;
- }else{
-  const x=bestMixed(present);
-  games=x.games.map((g,i)=>({...g,machine:i+1}));
-  pauses=x.pauses;
+ if(mode==="einzel"&&present.length<2){
+  alert("Für ein weiteres Einzel sind aktuell keine zwei freien Spieler verfügbar.");
+  return;
+ }
+ if(mode==="doppel"&&present.length<4){
+  alert("Für ein weiteres Doppel sind aktuell keine vier freien Spieler verfügbar.");
+  return;
+ }
+ if(mode==="mixed"&&present.length<2){
+  alert("Aktuell sind keine zwei freien Spieler verfügbar.");
+  return;
  }
 
+ let games=[],pauses=[];
+ const maxGames=machines.length;
+
+ if(mode==="einzel"){
+  // Fill each free machine with one single if enough free players exist.
+  let pool=[...present];
+  for(let k=0;k<maxGames && pool.length>=2;k++){
+   const pair=chooseBestSinglePair(pool);
+   if(!pair)break;
+   games.push({type:"einzel",players:pair,result:"",machine:machines[k]});
+   pool=pool.filter(n=>!pair.includes(n));
+  }
+  pauses=pool;
+ }else if(mode==="doppel"){
+  let pool=[...present];
+  for(let k=0;k<maxGames && pool.length>=4;k++){
+   // random/fair four-player block, preserving existing opponent avoidance approximately
+   let best=null;
+   for(let t=0;t<500;t++){
+    const s=[...pool].sort(()=>Math.random()-.5).slice(0,4);
+    const score=opponentCount(s[0],s[2])+opponentCount(s[0],s[3])+opponentCount(s[1],s[2])+opponentCount(s[1],s[3]);
+    if(!best||score<best.score)best={players:s,score};
+   }
+   if(!best)break;
+   games.push({type:"doppel",players:best.players,result:"",machine:machines[k]});
+   pool=pool.filter(n=>!best.players.includes(n));
+  }
+  pauses=pool;
+ }else{
+  let pool=[...present];
+
+  if(maxGames===2 && pool.length>=6){
+   // Default: one double + one single across both free machines.
+   let bestD=null;
+   for(let t=0;t<700;t++){
+    const s=[...pool].sort(()=>Math.random()-.5).slice(0,4);
+    const score=opponentCount(s[0],s[2])+opponentCount(s[0],s[3])+opponentCount(s[1],s[2])+opponentCount(s[1],s[3]);
+    if(!bestD||score<bestD.score)bestD={players:s,score};
+   }
+   games.push({type:"doppel",players:bestD.players,result:"",machine:machines[0]});
+   pool=pool.filter(n=>!bestD.players.includes(n));
+   const pair=chooseBestSinglePair(pool);
+   if(pair){
+    games.push({type:"einzel",players:pair,result:"",machine:machines[1]});
+    pool=pool.filter(n=>!pair.includes(n));
+   }
+  }else{
+   // With one free machine, default to a single if possible.
+   // With two free machines and fewer than six players, use singles where possible.
+   for(let k=0;k<maxGames && pool.length>=2;k++){
+    const pair=chooseBestSinglePair(pool);
+    if(!pair)break;
+    games.push({type:"einzel",players:pair,result:"",machine:machines[k]});
+    pool=pool.filter(n=>!pair.includes(n));
+   }
+  }
+  pauses=pool;
+ }
+
+ if(!games.length){
+  alert("Mit den aktuell freien Spielern kann keine weitere Partie ausgelost werden.");
+  return;
+ }
+
+ // Only count as pause those who are free and not selected into a newly started game.
  pauses.forEach(p=>state.history.pauses[p]=(state.history.pauses[p]||0)+1);
 
  games.forEach(g=>{
@@ -577,7 +656,14 @@ function drawRound(){
   }
  });
 
- state.rounds.push({id:Date.now(),mode,games,pauses});
+ state.rounds.push({
+  id:Date.now(),
+  mode,
+  games,
+  pauses,
+  partial:machines.length<2
+ });
+
  persist();
  renderAll();
 }
@@ -694,14 +780,14 @@ function winnerSlots(r,g){
 function renderRounds(){
  rounds.innerHTML=state.rounds.length?"":'<p class="small">Noch keine Runde ausgelost.</p>';
  const pending=state.rounds.map((r,i)=>({r,i})).filter(x=>!x.r.games.every(g=>!!g.result)).map(x=>x.i);
- const currentIdx=pending.length?pending[0]:-1,nextIdx=pending.length>1?pending[1]:-1;
+ const currentIdx=pending.length?pending[0]:-1,nextIdx=-1;
 
  state.rounds.forEach((r,ri)=>{
-  const complete=r.games.every(g=>!!g.result),isNext=ri===nextIdx;
+  const complete=r.games.every(g=>!!g.result),isNext=false;
   const box=document.createElement("div");
   box.className=complete?"round round-done":isNext?"round round-next":"round round-open";
-  const label=complete?"✓ Runde beendet":isNext?"⏭ Als Nächstes":"● Aktuelle Runde";
-  const labelClass=complete?"done":isNext?"next":"open";
+  const label=complete?"✓ Runde beendet":"● Laufende / neue Spiele";
+  const labelClass=complete?"done":"open";
   const roundTitle=r.mode==="mixed"?"Gemischt / frei":r.mode==="einzel"?"Einzel":"Doppel";
   box.innerHTML='<div class="round-head"><span>Runde '+(ri+1)+' – '+roundTitle+'</span><span class="round-state '+labelClass+'">'+label+'</span></div>';
 
@@ -747,7 +833,7 @@ function renderRounds(){
 
    const rs=d.querySelector(".result-select");
    rs.value=g.result;
-   rs.disabled=isNext;
+   rs.disabled=false;
    rs.onchange=()=>setResult(r.id,gi,rs.value);
 
    // If this machine has just become free while another machine is still busy,
@@ -865,13 +951,28 @@ function renderBilling(){
  summaryMatches.textContent=c.completed;
  summaryRounds.textContent=state.rounds.length;
 
- const unfinished=unfinishedRounds(),open=unfinished.length>0;
- overallStatus.className="status-top "+(open?"open":"done");
- if(!state.rounds.length)overallStatus.textContent="Noch keine Runde gestartet";
- else if(unfinished.length===2)overallStatus.textContent="● Aktuelle Runde läuft · ⏭ nächste Runde ist vorbereitet";
- else if(unfinished.length===1)overallStatus.textContent="● Aktuelle Runde läuft · nächste Runde kann vorausgelost werden";
- else overallStatus.textContent="✓ Alle ausgelosten Runden beendet";
- drawBtn.disabled=unfinished.length>=2;
+ const open=openGames();
+ const freeM=freeMachines();
+ const freeP=freeTrainingPlayers();
+
+ overallStatus.className="status-top "+(open.length?"open":"done");
+
+ if(!state.rounds.length){
+  overallStatus.textContent="Noch keine Runde gestartet";
+ }else if(!open.length){
+  overallStatus.textContent="✓ Alle laufenden Spiele beendet · beide Automaten frei";
+ }else if(freeM.length===1){
+  overallStatus.textContent="● Ein Automat läuft noch · Automat "+freeM[0]+" ist frei und kann sofort neu belegt werden";
+ }else{
+  overallStatus.textContent="● Beide Automaten sind belegt";
+ }
+
+ let canDraw=false;
+ if(freeM.length){
+  if(mode==="doppel")canDraw=freeP.length>=4;
+  else canDraw=freeP.length>=2;
+ }
+ drawBtn.disabled=!canDraw;
 }
 function snapshot(){
  const c=calculate();
