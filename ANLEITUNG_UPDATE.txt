@@ -1,12 +1,16 @@
-DC Hunters v24 – Zahlungen und Mannschaftskasse
+DC Hunters v25 – Flexibles Training
 
-Trainingsabrechnung:
-- Soll = Betrag laut Spielen
-- Bezahlt = tatsächlich gegebenen Betrag manuell eintragen
-- Mannschaftskasse = automatisch Bezahlt minus Soll, wenn positiv
+NEU:
+- Dritter Trainingsmodus: „Gemischt / frei“.
+- Bei 6 Spielern schlägt die App automatisch 1 Doppel + 1 Einzel vor.
+- Nach der Auslosung kann pro Automat die Spielart zwischen Einzel und Doppel geändert werden.
+- Spieler können weiterhin individuell ausgetauscht werden.
+- Dadurch sind z.B. auch 2 Einzel bei 6 Spielern möglich; übrige Spieler haben Pause.
+- Zwei Einzel hintereinander oder andere Kombinationen sind möglich.
+- Statistik, Abrechnung, Zahlungen, Mannschaftskasse, Speichern, Archiv, „Als Nächstes“ und PDF berücksichtigen Einzel/Doppel pro Spiel.
 
-Beispiel:
-Soll 6,00 EUR / Bezahlt 10,00 EUR / Mannschaftskasse 4,00 EUR
+Wichtig:
+Beim Wechsel von Doppel auf Einzel gehen die zwei überschüssigen Spieler automatisch in Pause.
+Beim Wechsel von Einzel auf Doppel werden zuerst verfügbare Pausenspieler ergänzt.
 
-Die Werte werden mit dem Trainingstag gespeichert, beim Öffnen wiederhergestellt und in die PDF übernommen.
-Freundschaftsspiel bleibt unverändert.
+Auf GitHub alle Dateien ersetzen. Danach muss oben v25 stehen.

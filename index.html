@@ -133,10 +133,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .pay-input{width:92px;min-height:38px;padding:6px 8px;border:1px solid var(--line);border-radius:9px;text-align:right;font-weight:800}
 .extra-positive{color:#17663a;font-weight:900}
 @media(max-width:760px){.pay-input{width:78px;font-size:14px}}
+
+.game-type-select{min-height:38px;padding:6px 9px;border:1px solid var(--line);border-radius:9px;font-weight:900;background:#fff}
+.game-config{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v24</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v25</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -168,12 +171,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="tabs">
 <button id="einzelBtn" class="tab active" onclick="setMode('einzel')">Einzel</button>
 <button id="doppelBtn" class="tab" onclick="setMode('doppel')">Doppel</button>
+<button id="mixedBtn" class="tab" onclick="setMode('mixed')">Gemischt / frei</button>
 </div>
 <div class="actions" style="margin-top:10px">
 <button id="drawBtn" class="primary" onclick="drawRound()">Runde auslosen / vorauslosen</button>
 <button class="light" onclick="undoRound()">Letzte Runde löschen</button>
 </div>
-<p class="small"><strong>Zwei Automaten:</strong> maximal zwei Partien gleichzeitig. Spielernamen können nach der Auslosung geändert werden.</p>
+<p class="small"><strong>Zwei Automaten:</strong> Im Modus „Gemischt / frei“ kannst du pro Automat Einzel oder Doppel wählen und die Spieler danach individuell ändern. Bei 6 Spielern kann die App automatisch 1 Doppel + 1 Einzel vorschlagen, du kannst daraus aber auch 2 Einzel machen.</p>
 </section>
 
 <section class="card">
@@ -321,7 +325,7 @@ function writeTrainingArchive(entries){
  }
 }
 
-const LEGACY_KEYS=["dc-hunters-v24","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
+const LEGACY_KEYS=["dc-hunters-v25","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
 let mode="einzel";
 
 function loadMainState(){
@@ -380,7 +384,12 @@ function persist(){
 function pairKey(a,b){return [a,b].sort().join("|")}
 function opponentCount(a,b){return state.history.opponents[pairKey(a,b)]||0}
 function addOpponent(a,b){const k=pairKey(a,b);state.history.opponents[k]=(state.history.opponents[k]||0)+1}
-function setMode(m){mode=m;einzelBtn.classList.toggle("active",m==="einzel");doppelBtn.classList.toggle("active",m==="doppel")}
+function setMode(m){
+ mode=m;
+ einzelBtn.classList.toggle("active",m==="einzel");
+ doppelBtn.classList.toggle("active",m==="doppel");
+ mixedBtn.classList.toggle("active",m==="mixed");
+}
 function updatePresentCount(){presentCount.textContent=allPlayers().filter(n=>state.present[n]!==false).length}
 
 function addGuest(){
@@ -432,6 +441,45 @@ function bestDoubles(list){
  }
  return best;
 }
+
+function bestMixed(list){
+ let best=null;
+ for(let t=0;t<1600;t++){
+  const s=[...list].sort(()=>Math.random()-.5);
+  let games=[],pauses=[],score=0;
+
+  if(s.length>=6){
+   // Use six players first: one double + one single.
+   const active=s.slice(0,6);
+   pauses=s.slice(6);
+   const d=active.slice(0,4),e=active.slice(4,6);
+   games=[
+    {type:"doppel",players:d,result:""},
+    {type:"einzel",players:e,result:""}
+   ];
+   score+=opponentCount(d[0],d[2])+opponentCount(d[0],d[3])+opponentCount(d[1],d[2])+opponentCount(d[1],d[3]);
+   score+=opponentCount(e[0],e[1])*15;
+  }else if(s.length>=4){
+   // With 4 or 5 players default to two singles; user may change them afterwards.
+   const active=s.slice(0,4);
+   pauses=s.slice(4);
+   games=[
+    {type:"einzel",players:active.slice(0,2),result:""},
+    {type:"einzel",players:active.slice(2,4),result:""}
+   ];
+   score+=opponentCount(active[0],active[1])*15;
+   score+=opponentCount(active[2],active[3])*15;
+  }else if(s.length>=2){
+   games=[{type:"einzel",players:s.slice(0,2),result:""}];
+   pauses=s.slice(2);
+   score+=opponentCount(s[0],s[1])*15;
+  }
+
+  pauses.forEach(p=>score+=(state.history.pauses[p]||0)*5);
+  if(!best||score<best.score)best={games,pauses,score};
+ }
+ return best;
+}
 function unfinishedRounds(){
  return state.rounds.filter(r=>!r.games.every(g=>!!g.result));
 }
@@ -439,41 +487,148 @@ function currentRoundComplete(){
  return unfinishedRounds().length===0;
 }
 function drawRound(){
- if(unfinishedRounds().length>=2){alert("Aktuelle Runde und nächste Runde sind bereits vorbereitet.");return}
+ if(unfinishedRounds().length>=2){
+  alert("Aktuelle Runde und nächste Runde sind bereits vorbereitet.");
+  return;
+ }
  const present=allPlayers().filter(n=>state.present[n]!==false);
- if(mode==="einzel"&&present.length<2){alert("Mindestens 2 Spieler nötig.");return}
- if(mode==="doppel"&&present.length<4){alert("Mindestens 4 Spieler nötig.");return}
+
+ if(mode==="einzel"&&present.length<2){alert("Mindestens 2 Spieler nötig.");return;}
+ if(mode==="doppel"&&present.length<4){alert("Mindestens 4 Spieler nötig.");return;}
+ if(mode==="mixed"&&present.length<2){alert("Mindestens 2 Spieler nötig.");return;}
+
  let games=[],pauses=[];
- if(mode==="einzel"){const x=bestPairing(present);games=x.pairs.map(p=>({players:p,result:""}));pauses=x.pauses}
- else{const x=bestDoubles(present);games=x.games.map(g=>({players:g,result:""}));pauses=x.pauses}
+
+ if(mode==="einzel"){
+  const x=bestPairing(present);
+  games=x.pairs.map(p=>({type:"einzel",players:p,result:""}));
+  pauses=x.pauses;
+ }else if(mode==="doppel"){
+  const x=bestDoubles(present);
+  games=x.games.map(g=>({type:"doppel",players:g,result:""}));
+  pauses=x.pauses;
+ }else{
+  const x=bestMixed(present);
+  games=x.games;
+  pauses=x.pauses;
+ }
+
  pauses.forEach(p=>state.history.pauses[p]=(state.history.pauses[p]||0)+1);
- games.forEach(g=>{if(mode==="einzel")addOpponent(g.players[0],g.players[1]);else{addOpponent(g.players[0],g.players[2]);addOpponent(g.players[0],g.players[3]);addOpponent(g.players[1],g.players[2]);addOpponent(g.players[1],g.players[3])}});
- state.rounds.push({id:Date.now(),mode,games,pauses});persist();renderAll();
+
+ games.forEach(g=>{
+  if(g.type==="einzel"){
+   addOpponent(g.players[0],g.players[1]);
+  }else{
+   addOpponent(g.players[0],g.players[2]);
+   addOpponent(g.players[0],g.players[3]);
+   addOpponent(g.players[1],g.players[2]);
+   addOpponent(g.players[1],g.players[3]);
+  }
+ });
+
+ state.rounds.push({id:Date.now(),mode,games,pauses});
+ persist();
+ renderAll();
 }
 function undoRound(){if(state.rounds.length){state.rounds.pop();rebuildHistory();persist();renderAll()}}
 function rebuildHistory(){
  state.history={opponents:{},pauses:Object.fromEntries(allPlayers().map(n=>[n,0]))};
- state.rounds.forEach(r=>{r.pauses.forEach(p=>state.history.pauses[p]=(state.history.pauses[p]||0)+1);r.games.forEach(g=>{if(r.mode==="einzel")addOpponent(g.players[0],g.players[1]);else{addOpponent(g.players[0],g.players[2]);addOpponent(g.players[0],g.players[3]);addOpponent(g.players[1],g.players[2]);addOpponent(g.players[1],g.players[3])}})});
+ state.rounds.forEach(r=>{
+  (r.pauses||[]).forEach(p=>state.history.pauses[p]=(state.history.pauses[p]||0)+1);
+  (r.games||[]).forEach(g=>{
+   const type=g.type||r.mode;
+   if(type==="einzel"){
+    if(g.players.length>=2)addOpponent(g.players[0],g.players[1]);
+   }else if(g.players.length>=4){
+    addOpponent(g.players[0],g.players[2]);
+    addOpponent(g.players[0],g.players[3]);
+    addOpponent(g.players[1],g.players[2]);
+    addOpponent(g.players[1],g.players[3]);
+   }
+  });
+ });
 }
 function playerOptions(current){
  return allPlayers().filter(n=>state.present[n]!==false||n===current).map(n=>'<option '+(n===current?"selected":"")+'>'+n+'</option>').join("");
 }
+
+function changeGameType(roundId,gameIndex,newType){
+ const r=state.rounds.find(x=>x.id===roundId);
+ if(!r)return;
+ const g=r.games[gameIndex];
+ if(!g)return;
+ if(g.result){
+  if(!confirm("Für dieses Spiel ist bereits ein Ergebnis eingetragen. Spielart ändern und Ergebnis löschen?"))return;
+  g.result="";
+ }
+
+ if(newType==="einzel" && g.players.length>2){
+  // Move surplus players to pause list.
+  const surplus=g.players.slice(2);
+  g.players=g.players.slice(0,2);
+  surplus.forEach(p=>{if(!r.pauses.includes(p))r.pauses.push(p)});
+ }else if(newType==="doppel" && g.players.length<4){
+  // Pull two available players from pauses first, otherwise from other non-finished game only if unique.
+  const need=4-g.players.length;
+  const available=[...r.pauses].filter(p=>!g.players.includes(p));
+  if(available.length<need){
+   alert("Für ein Doppel werden 4 Spieler benötigt. Bitte zuerst genügend Spieler über die Auswahllisten zuordnen.");
+   return;
+  }
+  const add=available.slice(0,need);
+  g.players.push(...add);
+  r.pauses=r.pauses.filter(p=>!add.includes(p));
+ }
+ g.type=newType;
+ rebuildHistory();
+ persist();
+ renderAll();
+}
+
+function flexiblePlayerOptions(current){
+ return allPlayers()
+  .filter(n=>state.present[n]!==false || n===current)
+  .map(n=>'<option '+(n===current?"selected":"")+'>'+n+'</option>')
+  .join("");
+}
 function changePlayer(roundId,gameIndex,slot,newName){
- const r=state.rounds.find(x=>x.id===roundId),g=r?.games[gameIndex];if(!g)return;
- const old=g.players[slot];if(!newName||newName===old)return;
+ const r=state.rounds.find(x=>x.id===roundId),g=r?.games[gameIndex];
+ if(!g)return;
+ const old=g.players[slot];
+ if(!newName||newName===old)return;
+
  let other=null;
- r.games.forEach((og,gi)=>og.players.forEach((n,si)=>{if(n===newName&&!(gi===gameIndex&&si===slot))other={gi,si}}));
- if(other)r.games[other.gi].players[other.si]=old;
- else{const pi=r.pauses.indexOf(newName);if(pi>=0)r.pauses[pi]=old;else if(!r.pauses.includes(old))r.pauses.push(old)}
- g.players[slot]=newName;if(g.result){g.result="";alert("Ergebnis wurde wegen Spielerwechsel gelöscht.")}
- rebuildHistory();persist();renderAll();
+ r.games.forEach((og,gi)=>og.players.forEach((n,si)=>{
+  if(n===newName&&!(gi===gameIndex&&si===slot))other={gi,si};
+ }));
+
+ if(other){
+  r.games[other.gi].players[other.si]=old;
+ }else{
+  const pi=r.pauses.indexOf(newName);
+  if(pi>=0){
+   r.pauses[pi]=old;
+  }else if(!r.pauses.includes(old)){
+   r.pauses.push(old);
+  }
+ }
+
+ g.players[slot]=newName;
+ if(g.result){
+  g.result="";
+  alert("Ergebnis wurde wegen Spielerwechsel gelöscht.");
+ }
+ rebuildHistory();
+ persist();
+ renderAll();
 }
 function setResult(id,i,v){const r=state.rounds.find(x=>x.id===id);if(r){r.games[i].result=v;persist();renderAll()}}
 function rule(g){if(!g.result)return"Noch offen – Ergebnis eintragen";return(g.result==="2:0"||g.result==="0:2")?"Beendet · jeder zahlt 1,00 €":"Beendet · jeder zahlt 1,50 €"}
 function winnerSlots(r,g){
  if(!g.result)return{w:[],l:[]};
  const left=g.result==="2:0"||g.result==="2:1";
- if(r.mode==="einzel")return left?{w:[0],l:[1]}:{w:[1],l:[0]};
+ const type=g.type||r.mode;
+ if(type==="einzel")return left?{w:[0],l:[1]}:{w:[1],l:[0]};
  return left?{w:[0,1],l:[2,3]}:{w:[2,3],l:[0,1]};
 }
 function winnerSlots(r,g){
@@ -488,48 +643,97 @@ function renderRounds(){
  const currentIdx=pending.length?pending[0]:-1,nextIdx=pending.length>1?pending[1]:-1;
 
  state.rounds.forEach((r,ri)=>{
-  const complete=r.games.every(g=>!!g.result),isCurrent=ri===currentIdx,isNext=ri===nextIdx;
+  const complete=r.games.every(g=>!!g.result),isNext=ri===nextIdx;
   const box=document.createElement("div");
   box.className=complete?"round round-done":isNext?"round round-next":"round round-open";
   const label=complete?"✓ Runde beendet":isNext?"⏭ Als Nächstes":"● Aktuelle Runde";
   const labelClass=complete?"done":isNext?"next":"open";
-  box.innerHTML='<div class="round-head"><span>Runde '+(ri+1)+' – '+(r.mode==="einzel"?"Einzel":"Doppel")+'</span><span class="round-state '+labelClass+'">'+label+'</span></div>';
-  if(isNext){const n=document.createElement("div");n.className="next-banner";n.textContent="Als Nächstes – bitte schon bereithalten";box.appendChild(n)}
+  const roundTitle=r.mode==="mixed"?"Gemischt / frei":r.mode==="einzel"?"Einzel":"Doppel";
+  box.innerHTML='<div class="round-head"><span>Runde '+(ri+1)+' – '+roundTitle+'</span><span class="round-state '+labelClass+'">'+label+'</span></div>';
+
+  if(isNext){
+   const n=document.createElement("div");
+   n.className="next-banner";
+   n.textContent="Als Nächstes – bitte schon bereithalten";
+   box.appendChild(n);
+  }
 
   r.games.forEach((g,gi)=>{
+   const type=g.type||r.mode;
    const done=!!g.result,wl=winnerSlots(r,g),d=document.createElement("div");
    d.className="game "+(done?"game-done":isNext?"game-next":"game-open");
    const st=done?"✓ beendet":isNext?"⏭ danach":"● offen";
    const sc=done?"done":isNext?"next":"open";
-   d.innerHTML='<div class="game-title"><strong>Automat '+(gi+1)+'</strong><span class="game-status '+sc+'">'+st+'</span></div>';
+
+   let config='<div class="game-config"><strong>Automat '+(gi+1)+'</strong>';
+   if(r.mode==="mixed"){
+    config+='<select class="game-type-select" data-type><option value="einzel" '+(type==="einzel"?"selected":"")+'>Einzel</option><option value="doppel" '+(type==="doppel"?"selected":"")+'>Doppel</option></select>';
+   }else{
+    config+='<span class="badge">'+(type==="einzel"?"Einzel":"Doppel")+'</span>';
+   }
+   config+='</div><span class="game-status '+sc+'">'+st+'</span>';
+   d.innerHTML='<div class="game-title">'+config+'</div>';
+
    const cls=s=>wl.w.includes(s)?" winner":wl.l.includes(s)?" loser":"";
    let m="";
-   if(r.mode==="einzel"){
-    m='<div class="match"><select class="player-choice'+cls(0)+'" data-slot="0">'+playerOptions(g.players[0])+'</select><div class="vs">gegen</div><select class="player-choice'+cls(1)+'" data-slot="1">'+playerOptions(g.players[1])+'</select></div>';
+   if(type==="einzel"){
+    m='<div class="match"><select class="player-choice'+cls(0)+'" data-slot="0">'+flexiblePlayerOptions(g.players[0])+'</select><div class="vs">gegen</div><select class="player-choice'+cls(1)+'" data-slot="1">'+flexiblePlayerOptions(g.players[1])+'</select></div>';
    }else{
-    m='<div class="match"><div class="team-selects"><select class="player-choice'+cls(0)+'" data-slot="0">'+playerOptions(g.players[0])+'</select><select class="player-choice'+cls(1)+'" data-slot="1">'+playerOptions(g.players[1])+'</select></div><div class="vs">gegen</div><div class="team-selects"><select class="player-choice'+cls(2)+'" data-slot="2">'+playerOptions(g.players[2])+'</select><select class="player-choice'+cls(3)+'" data-slot="3">'+playerOptions(g.players[3])+'</select></div></div>';
+    while(g.players.length<4)g.players.push("");
+    m='<div class="match"><div class="team-selects"><select class="player-choice'+cls(0)+'" data-slot="0">'+flexiblePlayerOptions(g.players[0])+'</select><select class="player-choice'+cls(1)+'" data-slot="1">'+flexiblePlayerOptions(g.players[1])+'</select></div><div class="vs">gegen</div><div class="team-selects"><select class="player-choice'+cls(2)+'" data-slot="2">'+flexiblePlayerOptions(g.players[2])+'</select><select class="player-choice'+cls(3)+'" data-slot="3">'+flexiblePlayerOptions(g.players[3])+'</select></div></div>';
    }
+
    d.innerHTML+=m+'<div class="result"><select class="result-select"><option value="">Ergebnis wählen</option><option>2:0</option><option>2:1</option><option>1:2</option><option>0:2</option></select><div class="note">'+(isNext&&!g.result?"Als Nächstes – Ergebnis erst später":rule(g))+'</div></div>';
+
+   const typeSelect=d.querySelector("[data-type]");
+   if(typeSelect)typeSelect.onchange=()=>changeGameType(r.id,gi,typeSelect.value);
+
    d.querySelectorAll(".player-choice").forEach(s=>s.onchange=()=>changePlayer(r.id,gi,Number(s.dataset.slot),s.value));
-   const rs=d.querySelector(".result-select");rs.value=g.result;rs.disabled=isNext;rs.onchange=()=>setResult(r.id,gi,rs.value);
+
+   const rs=d.querySelector(".result-select");
+   rs.value=g.result;
+   rs.disabled=isNext;
+   rs.onchange=()=>setResult(r.id,gi,rs.value);
    box.appendChild(d);
   });
-  if(r.pauses.length){const p=document.createElement("div");p.className="pause";p.textContent=(isNext?"Pause als Nächstes: ":"Pause: ")+r.pauses.join(", ");box.appendChild(p)}
+
+  if(r.pauses.length){
+   const pa=document.createElement("div");
+   pa.className="pause";
+   pa.textContent=(isNext?"Pause als Nächstes: ":"Pause: ")+r.pauses.join(", ");
+   box.appendChild(pa);
+  }
   rounds.appendChild(box);
  });
 }
 function calculate(){
  const b=Object.fromEntries(allPlayers().map(n=>[n,{games:0,wins:0,losses:0,legs:0,cost:0,pauses:state.history.pauses[n]||0}]));
  let completed=0;
+
  state.rounds.forEach(r=>r.games.forEach(g=>{
-  if(!g.result)return;completed++;
-  const legs=(g.result==="2:0"||g.result==="0:2")?2:3,cost=legs*.5,leftWin=g.result.startsWith("2");
-  g.players.forEach(p=>{b[p].games++;b[p].legs+=legs;b[p].cost+=cost});
-  if(r.mode==="einzel"){
-   const w=leftWin?g.players[0]:g.players[1],l=leftWin?g.players[1]:g.players[0];b[w].wins++;b[l].losses++;
+  if(!g.result)return;
+  completed++;
+  const type=g.type||r.mode;
+  const legs=(g.result==="2:0"||g.result==="0:2")?2:3;
+  const cost=legs*.5;
+  const leftWin=g.result.startsWith("2");
+
+  g.players.filter(Boolean).forEach(p=>{
+   if(!b[p])b[p]={games:0,wins:0,losses:0,legs:0,cost:0,pauses:0};
+   b[p].games++;
+   b[p].legs+=legs;
+   b[p].cost+=cost;
+  });
+
+  if(type==="einzel"){
+   const w=leftWin?g.players[0]:g.players[1],l=leftWin?g.players[1]:g.players[0];
+   if(w)b[w].wins++;
+   if(l)b[l].losses++;
   }else{
-   const winners=leftWin?g.players.slice(0,2):g.players.slice(2,4),losers=leftWin?g.players.slice(2,4):g.players.slice(0,2);
-   winners.forEach(p=>b[p].wins++);losers.forEach(p=>b[p].losses++);
+   const winners=leftWin?g.players.slice(0,2):g.players.slice(2,4);
+   const losers=leftWin?g.players.slice(2,4):g.players.slice(0,2);
+   winners.filter(Boolean).forEach(p=>b[p].wins++);
+   losers.filter(Boolean).forEach(p=>b[p].losses++);
   }
  }));
  return{players:b,completed};
@@ -724,12 +928,18 @@ function pdfEscape(s){return String(s).replace(/\\/g,"\\\\").replace(/\(/g,"\\("
 function pdfLinesFromSnapshot(snap){
  const lines=["DC HUNTERS - TRAININGSBERICHT","Trainingstag: "+new Date(snap.date+"T12:00:00").toLocaleDateString("de-DE"),"","SPIELE"];
  snap.rounds.forEach((r,ri)=>{
-  lines.push("Runde "+(ri+1)+" - "+(r.mode==="einzel"?"Einzel":"Doppel"));
+  const roundTitle=r.mode==="mixed"?"Gemischt / frei":r.mode==="einzel"?"Einzel":"Doppel";
+  lines.push("Runde "+(ri+1)+" - "+roundTitle);
   r.games.forEach((g,gi)=>{
+   const type=g.type||r.mode;
    let a,b;
-   if(r.mode==="einzel"){a=g.players[0];b=g.players[1]}
-   else{a=g.players[0]+" + "+g.players[1];b=g.players[2]+" + "+g.players[3]}
-   lines.push("  Automat "+(gi+1)+": "+a+"  "+(g.result||"-")+"  "+b);
+   if(type==="einzel"){
+    a=g.players[0];b=g.players[1];
+   }else{
+    a=(g.players[0]||"")+" + "+(g.players[1]||"");
+    b=(g.players[2]||"")+" + "+(g.players[3]||"");
+   }
+   lines.push("  Automat "+(gi+1)+" "+(type==="einzel"?"Einzel":"Doppel")+": "+a+"  "+(g.result||"-")+"  "+b);
   });
   if(r.pauses.length)lines.push("  Pause: "+r.pauses.join(", "));
   lines.push("");
@@ -741,8 +951,7 @@ function pdfLinesFromSnapshot(snap){
   const q=x.games?Math.round(x.wins/x.games*100):0;
   const paid=Number(pays[n]||0);
   const extra=Math.max(0,paid-x.cost);
-  paidSum+=paid;
-  teamCashSum+=extra;
+  paidSum+=paid;teamCashSum+=extra;
   lines.push((i+1)+". "+n+" | Spiele "+x.games+" | Siege "+x.wins+" | Quote "+q+"% | Soll "+euro(x.cost)+" | Bezahlt "+euro(paid)+" | Kasse "+euro(extra));
  });
  lines.push("","Soll aus Spielen: "+euro(snap.total),"Tatsaechlich bezahlt: "+euro(paidSum),"Davon Mannschaftskasse: "+euro(teamCashSum));
