@@ -1,16 +1,15 @@
-DC Hunters v25 – Flexibles Training
+DC Hunters v26 – Freier Automat
 
 NEU:
-- Dritter Trainingsmodus: „Gemischt / frei“.
-- Bei 6 Spielern schlägt die App automatisch 1 Doppel + 1 Einzel vor.
-- Nach der Auslosung kann pro Automat die Spielart zwischen Einzel und Doppel geändert werden.
-- Spieler können weiterhin individuell ausgetauscht werden.
-- Dadurch sind z.B. auch 2 Einzel bei 6 Spielern möglich; übrige Spieler haben Pause.
-- Zwei Einzel hintereinander oder andere Kombinationen sind möglich.
-- Statistik, Abrechnung, Zahlungen, Mannschaftskasse, Speichern, Archiv, „Als Nächstes“ und PDF berücksichtigen Einzel/Doppel pro Spiel.
+- Spiele laufen jetzt pro Automat weiter, nicht mehr nur als komplette Runde.
+- Wenn z.B. Automat 1 noch Doppel spielt und Automat 2 sein Einzel beendet hat,
+  erscheint bei Automat 2:
+  „Neues Einzel auf Automat 2 starten“.
+- Die App nimmt dafür zwei Spieler, die aktuell in keinem offenen Spiel gebunden sind.
+- Bei 6 Spielern können die zwei Einzelspieler also direkt ein weiteres Einzel spielen,
+  während das Doppel weiterläuft.
+- Der neue Spielstand zählt normal in Statistik, Abrechnung, Zahlungen, Archiv und PDF.
+- Spieler dürfen in späteren, bereits nachgelegten Spielen erneut vorkommen.
+- Ein Spieler kann aber nicht gleichzeitig auf zwei Automaten eingesetzt werden.
 
-Wichtig:
-Beim Wechsel von Doppel auf Einzel gehen die zwei überschüssigen Spieler automatisch in Pause.
-Beim Wechsel von Einzel auf Doppel werden zuerst verfügbare Pausenspieler ergänzt.
-
-Auf GitHub alle Dateien ersetzen. Danach muss oben v25 stehen.
+Der flexible Modus „Gemischt / frei“ bleibt erhalten.

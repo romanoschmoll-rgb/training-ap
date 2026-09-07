@@ -136,10 +136,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 .game-type-select{min-height:38px;padding:6px 9px;border:1px solid var(--line);border-radius:9px;font-weight:900;background:#fff}
 .game-config{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+.machine-next{margin-top:9px;display:flex;gap:8px;flex-wrap:wrap}
+.machine-next button{width:100%}
+.machine-info{background:#e8f3fb;border:1px solid #8bb4d2;color:#174d75;border-radius:10px;padding:8px 10px;font-weight:800;margin-top:8px}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v25</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v26</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -177,7 +181,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button id="drawBtn" class="primary" onclick="drawRound()">Runde auslosen / vorauslosen</button>
 <button class="light" onclick="undoRound()">Letzte Runde löschen</button>
 </div>
-<p class="small"><strong>Zwei Automaten:</strong> Im Modus „Gemischt / frei“ kannst du pro Automat Einzel oder Doppel wählen und die Spieler danach individuell ändern. Bei 6 Spielern kann die App automatisch 1 Doppel + 1 Einzel vorschlagen, du kannst daraus aber auch 2 Einzel machen.</p>
+<p class="small"><strong>Zwei Automaten:</strong> Im Modus „Gemischt / frei“ kannst du pro Automat Einzel oder Doppel wählen und die Spieler danach individuell ändern. Bei 6 Spielern kann die App automatisch 1 Doppel + 1 Einzel vorschlagen. Wird ein Automat früher frei, kannst du dort sofort ein weiteres Einzel starten, ohne auf das andere Spiel zu warten.</p>
 </section>
 
 <section class="card">
@@ -325,7 +329,7 @@ function writeTrainingArchive(entries){
  }
 }
 
-const LEGACY_KEYS=["dc-hunters-v25","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
+const LEGACY_KEYS=["dc-hunters-v26","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
 let mode="einzel";
 
 function loadMainState(){
@@ -486,6 +490,53 @@ function unfinishedRounds(){
 function currentRoundComplete(){
  return unfinishedRounds().length===0;
 }
+
+function gameMachine(g,gi){
+ return Number(g.machine||gi+1);
+}
+function activeTrainingPlayers(){
+ const used=new Set();
+ state.rounds.forEach(r=>(r.games||[]).forEach(g=>{
+   if(!g.result)(g.players||[]).filter(Boolean).forEach(p=>used.add(p));
+ }));
+ return used;
+}
+function chooseBestSinglePair(names){
+ if(names.length<2)return null;
+ let best=null;
+ for(let i=0;i<names.length;i++){
+  for(let j=i+1;j<names.length;j++){
+   const a=names[i],b=names[j];
+   const score=opponentCount(a,b)*20 + (state.history.pauses[a]||0) + (state.history.pauses[b]||0);
+   if(!best||score<best.score)best={players:[a,b],score};
+  }
+ }
+ return best&&best.players;
+}
+function addSingleOnFreeMachine(roundId,machine){
+ const r=state.rounds.find(x=>x.id===roundId);
+ if(!r)return;
+ const busy=activeTrainingPlayers();
+ const free=allPlayers().filter(n=>state.present[n]!==false&&!busy.has(n));
+ if(free.length<2){
+   alert("Aktuell sind keine zwei freien Spieler verfügbar.");
+   return;
+ }
+ const pair=chooseBestSinglePair(free);
+ if(!pair)return;
+ r.games.push({
+   type:"einzel",
+   players:pair,
+   result:"",
+   machine:Number(machine),
+   followUp:true
+ });
+ // Players who were listed as pause are no longer on pause while they play.
+ r.pauses=(r.pauses||[]).filter(p=>!pair.includes(p));
+ rebuildHistory();
+ persist();
+ renderAll();
+}
 function drawRound(){
  if(unfinishedRounds().length>=2){
   alert("Aktuelle Runde und nächste Runde sind bereits vorbereitet.");
@@ -501,15 +552,15 @@ function drawRound(){
 
  if(mode==="einzel"){
   const x=bestPairing(present);
-  games=x.pairs.map(p=>({type:"einzel",players:p,result:""}));
+  games=x.pairs.map((p,i)=>({type:"einzel",players:p,result:"",machine:i+1}));
   pauses=x.pauses;
  }else if(mode==="doppel"){
   const x=bestDoubles(present);
-  games=x.games.map(g=>({type:"doppel",players:g,result:""}));
+  games=x.games.map((g,i)=>({type:"doppel",players:g,result:"",machine:i+1}));
   pauses=x.pauses;
  }else{
   const x=bestMixed(present);
-  games=x.games;
+  games=x.games.map((g,i)=>({...g,machine:i+1}));
   pauses=x.pauses;
  }
 
@@ -597,20 +648,23 @@ function changePlayer(roundId,gameIndex,slot,newName){
  const old=g.players[slot];
  if(!newName||newName===old)return;
 
- let other=null;
- r.games.forEach((og,gi)=>og.players.forEach((n,si)=>{
-  if(n===newName&&!(gi===gameIndex&&si===slot))other={gi,si};
+ // A player may appear again in an already finished game, but never in two simultaneous open games.
+ let conflict=false;
+ state.rounds.forEach(rr=>(rr.games||[]).forEach(og=>{
+   if(og===g||og.result)return;
+   if((og.players||[]).includes(newName))conflict=true;
  }));
+ if(conflict){
+   alert(newName+" spielt gerade bereits auf einem anderen Automaten.");
+   renderAll();
+   return;
+ }
 
- if(other){
-  r.games[other.gi].players[other.si]=old;
- }else{
-  const pi=r.pauses.indexOf(newName);
-  if(pi>=0){
+ const pi=(r.pauses||[]).indexOf(newName);
+ if(pi>=0){
    r.pauses[pi]=old;
-  }else if(!r.pauses.includes(old)){
+ }else if(!r.pauses.includes(old)){
    r.pauses.push(old);
-  }
  }
 
  g.players[slot]=newName;
@@ -660,17 +714,19 @@ function renderRounds(){
 
   r.games.forEach((g,gi)=>{
    const type=g.type||r.mode;
+   const machine=gameMachine(g,gi);
    const done=!!g.result,wl=winnerSlots(r,g),d=document.createElement("div");
    d.className="game "+(done?"game-done":isNext?"game-next":"game-open");
    const st=done?"✓ beendet":isNext?"⏭ danach":"● offen";
    const sc=done?"done":isNext?"next":"open";
 
-   let config='<div class="game-config"><strong>Automat '+(gi+1)+'</strong>';
-   if(r.mode==="mixed"){
+   let config='<div class="game-config"><strong>Automat '+machine+'</strong>';
+   if(r.mode==="mixed"&&!g.followUp){
     config+='<select class="game-type-select" data-type><option value="einzel" '+(type==="einzel"?"selected":"")+'>Einzel</option><option value="doppel" '+(type==="doppel"?"selected":"")+'>Doppel</option></select>';
    }else{
     config+='<span class="badge">'+(type==="einzel"?"Einzel":"Doppel")+'</span>';
    }
+   if(g.followUp)config+='<span class="pill">nachgelegt</span>';
    config+='</div><span class="game-status '+sc+'">'+st+'</span>';
    d.innerHTML='<div class="game-title">'+config+'</div>';
 
@@ -679,7 +735,6 @@ function renderRounds(){
    if(type==="einzel"){
     m='<div class="match"><select class="player-choice'+cls(0)+'" data-slot="0">'+flexiblePlayerOptions(g.players[0])+'</select><div class="vs">gegen</div><select class="player-choice'+cls(1)+'" data-slot="1">'+flexiblePlayerOptions(g.players[1])+'</select></div>';
    }else{
-    while(g.players.length<4)g.players.push("");
     m='<div class="match"><div class="team-selects"><select class="player-choice'+cls(0)+'" data-slot="0">'+flexiblePlayerOptions(g.players[0])+'</select><select class="player-choice'+cls(1)+'" data-slot="1">'+flexiblePlayerOptions(g.players[1])+'</select></div><div class="vs">gegen</div><div class="team-selects"><select class="player-choice'+cls(2)+'" data-slot="2">'+flexiblePlayerOptions(g.players[2])+'</select><select class="player-choice'+cls(3)+'" data-slot="3">'+flexiblePlayerOptions(g.players[3])+'</select></div></div>';
    }
 
@@ -694,6 +749,30 @@ function renderRounds(){
    rs.value=g.result;
    rs.disabled=isNext;
    rs.onchange=()=>setResult(r.id,gi,rs.value);
+
+   // If this machine has just become free while another machine is still busy,
+   // allow an immediate extra single on this same machine.
+   const latestOnMachine=!r.games.some((other,oi)=>oi>gi&&gameMachine(other,oi)===machine);
+   const otherMachineBusy=r.games.some((other,oi)=>!other.result&&gameMachine(other,oi)!==machine);
+   if(done&&!isNext&&latestOnMachine&&otherMachineBusy){
+    const freeNow=allPlayers().filter(n=>state.present[n]!==false&&!activeTrainingPlayers().has(n));
+    const wrap=document.createElement("div");
+    wrap.className="machine-next";
+    const btn=document.createElement("button");
+    btn.className="secondary";
+    btn.textContent="➕ Neues Einzel auf Automat "+machine+" starten";
+    btn.disabled=freeNow.length<2;
+    btn.onclick=()=>addSingleOnFreeMachine(r.id,machine);
+    wrap.appendChild(btn);
+    if(freeNow.length>=2){
+      const info=document.createElement("div");
+      info.className="machine-info";
+      info.textContent="Frei: "+freeNow.join(", ");
+      wrap.appendChild(info);
+    }
+    d.appendChild(wrap);
+   }
+
    box.appendChild(d);
   });
 
@@ -939,7 +1018,7 @@ function pdfLinesFromSnapshot(snap){
     a=(g.players[0]||"")+" + "+(g.players[1]||"");
     b=(g.players[2]||"")+" + "+(g.players[3]||"");
    }
-   lines.push("  Automat "+(gi+1)+" "+(type==="einzel"?"Einzel":"Doppel")+": "+a+"  "+(g.result||"-")+"  "+b);
+   lines.push("  Automat "+(g.machine||gi+1)+" "+(type==="einzel"?"Einzel":"Doppel")+": "+a+"  "+(g.result||"-")+"  "+b);
   });
   if(r.pauses.length)lines.push("  Pause: "+r.pauses.join(", "));
   lines.push("");
