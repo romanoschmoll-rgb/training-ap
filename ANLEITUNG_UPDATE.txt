@@ -1,18 +1,17 @@
-DC Hunters v27 – Runde 2 trotz laufendem Doppel
+DC Hunters v30 – Gemeinschaftsspiele abrechnen
 
-WICHTIGE LOGIKÄNDERUNG:
-- Die App wartet nicht mehr auf das Ende der kompletten Runde.
-- Sobald mindestens ein Automat frei ist, kann sofort neu ausgelost werden.
-- Läuft auf Automat 1 noch ein Doppel und Automat 2 ist frei, kann Runde 2 / die nächste Partie direkt auf Automat 2 gestartet werden.
-- Es werden nur Spieler berücksichtigt, die gerade in keinem offenen Spiel gebunden sind.
-- Ein Spieler kann niemals gleichzeitig auf zwei Automaten spielen.
-- Wenn beide Automaten frei sind, können wieder bis zu zwei Spiele ausgelost werden.
-- Im Modus Gemischt/frei wird bei nur einem freien Automaten standardmäßig ein Einzel vorgeschlagen.
-- Statistik, Abrechnung, Zahlungen, Archiv und PDF bleiben erhalten.
+NEU: Unter „Spiele & Ergebnisse“ gibt es den Bereich „Gemeinschaftsspiel abrechnen“.
 
-Beispiel mit 6 Spielern:
-Automat 1: Doppel läuft weiter.
-Automat 2: Einzel ist fertig.
-=> Button bleibt aktiv.
-=> Nächste Partie wird sofort auf Automat 2 ausgelost.
-=> Kein Warten auf das Doppel mehr.
+- Teilnehmer antippen (standardmäßig alle anwesenden Spieler).
+- 2 Legs / 2:0 oder 0:2 = 1,00 EUR je Teilnehmer.
+- 3 Legs / 2:1 oder 1:2 = 1,50 EUR je Teilnehmer.
+- „Gemeinschaftsspiel hinzufügen“ buchen – mehrere Einträge möglich.
+- Kosten werden automatisch in Soll pro Spieler und Gesamtsumme berücksichtigt.
+- „Bezahlt“ und Mannschaftskasse funktionieren weiter wie bisher.
+- Die Gruppenspiele zählen nicht als Sieg/Niederlage in der Dart-Rangliste.
+- Gruppenspiele werden im Trainingsarchiv mitgespeichert, wiederhergestellt und in PDF angezeigt.
+- Bereits bestehende Trainingsarchive bleiben lesbar.
+- Speicher-Schlüssel für Trainings- und Freundschaftsdaten sind unverändert.
+
+Auf GitHub alle Dateien der ZIP ersetzen; danach muss oben „v30“ stehen.
+Achtung: Die Daten bleiben weiterhin lokal pro Gerät gespeichert – kein Cloud-Sync.

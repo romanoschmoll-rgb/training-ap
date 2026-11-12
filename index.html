@@ -140,10 +140,408 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .machine-next{margin-top:9px;display:flex;gap:8px;flex-wrap:wrap}
 .machine-next button{width:100%}
 .machine-info{background:#e8f3fb;border:1px solid #8bb4d2;color:#174d75;border-radius:10px;padding:8px 10px;font-weight:800;margin-top:8px}
+.simple-draw{display:flex;flex-direction:column;gap:8px;margin-top:12px}.simple-draw select{width:100%;min-height:48px;border-radius:12px;border:2px solid #b7c7d8;background:#fff;padding:10px;font-size:16px;font-weight:800}
+/* DC Hunters v30 – rein visuelles Dashboard-Refresh; keine Änderungen an Spielregeln. */
+:root {
+  --bg:#edf1f7;
+  --card:#ffffff;
+  --dark:#142b44;
+  --dark2:#254763;
+  --gold:#e0ad3d;
+  --gold2:#f8d784;
+  --line:#dce4ed;
+  --text:#16293c;
+  --muted:#617386;
+  --green:#e5f6e9;
+  --green-line:#79bd95;
+  --red:#fdeaea;
+  --red-line:#d88484;
+  --blue:#e4f0fb;
+  --yellow:#fff4d5;
+  --shadow:0 10px 36px rgba(20,43,68,.065),0 2px 6px rgba(20,43,68,.03);
+}
+html {scroll-behavior:smooth}
+body {
+  font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:radial-gradient(ellipse 1000px 560px at 100% -15%,rgba(209,226,246,.8),transparent 70%),linear-gradient(180deg,#f5f8fc 0%,#edf1f7 55%,#e9eef5 100%);
+  color:var(--text);
+  min-height:100vh;
+  line-height:1.48;
+  -webkit-font-smoothing:antialiased;
+}
+header {
+  min-height:82px;
+  justify-content:flex-start;
+  padding:13px max(22px,calc((100vw - 1174px)/2));
+  gap:13px;
+  background:linear-gradient(110deg,#0b1d31 0%,#162f4b 52%,#274866 100%);
+  border-bottom:1px solid rgba(255,255,255,.09);
+  box-shadow:0 8px 30px rgba(11,27,47,.15);
+  font-size:23px;
+  letter-spacing:-.035em;
+}
+header::after {
+  content:"";
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  height:3px;
+  background:linear-gradient(90deg,#d6a13b,#fff1b4 48%,#d6a13b);
+}
+header img {
+  width:53px;
+  height:53px;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:16px;
+  box-shadow:0 5px 18px rgba(0,0,0,.18);
+  object-fit:cover;
+}
+header .version {
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.05em;
+  padding:5px 9px;
+  border-radius:999px;
+  color:#f7df9f;
+  opacity:1;
+  background:rgba(248,215,132,.12);
+  border:1px solid rgba(248,215,132,.23);
+}
+main {max-width:1174px;padding:24px 20px 48px}
+.app-switch {
+  background:rgba(255,255,255,.9);
+  border:1px solid #dce5ee;
+  border-radius:19px;
+  padding:6px;
+  gap:6px;
+  box-shadow:var(--shadow);
+  margin-bottom:22px;
+}
+.app-switch button {
+  min-height:55px;
+  border-radius:14px;
+  font-size:15px;
+  font-weight:750;
+  letter-spacing:.005em;
+  color:#415a73;
+  background:transparent;
+  transition:background .16s ease,color .16s ease,transform .16s ease;
+}
+.app-switch .active {
+  background:linear-gradient(145deg,#193a57,#10283e);
+  color:#fff;
+  box-shadow:0 5px 15px rgba(23,51,79,.2);
+}
+.card {
+  padding:23px 25px;
+  margin-bottom:18px;
+  border:1px solid rgba(213,222,232,.86);
+  border-radius:22px;
+  background:rgba(255,255,255,.97);
+  box-shadow:var(--shadow);
+}
+h2 {
+  font-size:21px;
+  font-weight:830;
+  line-height:1.3;
+  letter-spacing:-.035em;
+  color:#19324a;
+  margin:0 0 16px;
+}
+h2::after {
+  content:"";
+  width:34px;
+  height:3px;
+  display:block;
+  background:linear-gradient(90deg,#e2af3f,#f7d988);
+  border-radius:20px;
+  margin-top:10px;
+}
+h3 {font-size:17px;letter-spacing:-.015em}
+.small {font-size:13px;line-height:1.55;color:#6e8092}
+.grid2,.grid3,.actions,.tabs,.guest-row,.summary-grid {gap:12px}
+.summary-box {
+  min-width:0;
+  border:1px solid #e1e9f2;
+  border-radius:16px;
+  padding:16px;
+  background:linear-gradient(145deg,#f7faff,#f0f5fb);
+}
+.summary-box span {color:#677a8d;font-size:12px;font-weight:670}
+.summary-box strong {
+  margin-top:6px;
+  font-size:27px;
+  font-weight:840;
+  color:#172f47;
+  letter-spacing:-.045em;
+  font-variant-numeric:tabular-nums;
+}
+#trainingView > section.card:first-child {
+  position:relative;
+  background:linear-gradient(115deg,#173650,#244a65);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.09);
+  overflow:hidden;
+}
+#trainingView > section.card:first-child::before {
+  content:"";
+  position:absolute;
+  width:245px;
+  height:245px;
+  border:1px solid rgba(243,205,113,.15);
+  border-radius:50%;
+  right:-100px;
+  top:-123px;
+  pointer-events:none;
+}
+#trainingView > section.card:first-child h2 {color:#fff}
+#trainingView > section.card:first-child .small {color:#d9e7f3}
+#trainingView > section.card:first-child .summary-box {
+  background:rgba(255,255,255,.12);
+  border-color:rgba(255,255,255,.18);
+}
+#trainingView > section.card:first-child .summary-box span {color:#dceaf5}
+#trainingView > section.card:first-child .summary-box strong {color:#fff}
+button {
+  border-radius:13px;
+  font-weight:780;
+  font-size:15px;
+  min-height:48px;
+  padding:11px 15px;
+  transition:filter .16s ease,transform .16s ease,box-shadow .16s ease;
+}
+button:hover:not(:disabled) {filter:brightness(1.045)}
+button:active:not(:disabled) {transform:scale(.987)}
+button:focus-visible,input:focus-visible,select:focus-visible {
+  outline:3px solid rgba(223,169,52,.55);
+  outline-offset:2px;
+}
+button.primary {
+  background:linear-gradient(135deg,#fae2a4,#e3ad3f);
+  color:#3a2808;
+  box-shadow:0 3px 12px rgba(198,146,37,.17);
+}
+button.secondary {background:linear-gradient(125deg,#23496a,#15344f);color:white}
+button.light,button.tab {
+  background:#f0f4f8;
+  border:1px solid #dce5ee;
+  color:#25445f;
+}
+button.danger {background:#c95359;color:#fff}
+button:disabled {opacity:.48;filter:grayscale(.12);box-shadow:none}
+input[type=text],input[type=date],select {
+  border:1px solid #d5e1ed;
+  border-radius:12px;
+  background:#fbfdff;
+  box-shadow:0 1px 2px rgba(24,48,75,.024);
+  color:#1a334b;
+  min-height:47px;
+  font-size:16px;
+  font-weight:570;
+}
+.simple-draw {
+  margin-top:15px;
+  padding:15px;
+  border:1px solid #e0e8f1;
+  border-radius:15px;
+  background:#f7faff;
+  gap:9px;
+}
+.simple-draw label {font-size:13px;color:#294660;font-weight:760}
+.simple-draw select {
+  border:1px solid #c9d8e5;
+  font-size:16px;
+  font-weight:710;
+  background:#fff;
+}
+#drawBtn {
+  font-size:17px;
+  letter-spacing:-.02em;
+  min-height:54px;
+}
+.players {gap:10px}
+.player {
+  min-height:59px;
+  border:1px solid #dfe7ef;
+  border-radius:14px;
+  background:#f8fafc;
+  padding:11px 14px;
+  font-size:15px;
+  font-weight:740;
+  transition:background .14s ease,border-color .14s ease,box-shadow .14s ease;
+}
+.player.on {
+  background:#ecf8f0;
+  border-color:#9bd1af;
+  box-shadow:inset 3px 0 #4f9c70;
+}
+.player input {width:22px;height:22px;accent-color:#397e58}
+.remove {background:#d75a60;border-radius:10px;font-weight:710}
+.status-top {
+  text-align:left;
+  border-radius:14px;
+  padding:14px 17px;
+  font-size:14px;
+  font-weight:800;
+}
+.status-top.open {background:#fff7df;color:#77550d;border-color:#f1d78f}
+.status-top.done {background:#e9f7ef;color:#1c6440;border-color:#b2d9c1}
+.round {
+  margin:14px 0;
+  border:1px solid #dee7f0;
+  border-radius:18px;
+  box-shadow:0 3px 12px rgba(23,48,75,.038);
+}
+.round-head {
+  min-height:53px;
+  background:linear-gradient(105deg,#142f49,#254662);
+  padding:13px 16px;
+  font-size:15px;
+  letter-spacing:-.015em;
+}
+.round.round-open {border:1px solid #f1d78f}
+.round.round-done {border:1px solid #b4dbc2}
+.round.round-next {border:1px solid #a9c9e5}
+.round-state,.game-status,.fixture-status {
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:790;
+  letter-spacing:.015em;
+  white-space:nowrap;
+}
+.game {padding:15px;border-top-color:#e2eaf2}
+.game.game-open {border-left:5px solid #e2b547;background:linear-gradient(90deg,#fffbef,#fff)}
+.game.game-done {border-left:5px solid #55a778;background:linear-gradient(90deg,#f0fbf4,#fff)}
+.game.game-next {border-left:5px solid #5795bf;background:linear-gradient(90deg,#f1f8ff,#fff)}
+.game-title {font-size:14px;margin-bottom:12px}
+.game-config {gap:9px}
+.game-config strong {letter-spacing:-.015em}
+.badge,.pill {
+  border-radius:999px;
+  padding:5px 10px;
+  font-size:11px;
+  font-weight:790;
+}
+.badge {background:#e9f0f7;color:#36526e}
+.player-choice {
+  min-width:0;
+  background:#f9fbff;
+  border-radius:12px;
+  font-weight:710;
+  text-align:center;
+}
+.player-choice.winner {border-color:#5cb681;background:#edf9f1;color:#24613f}
+.player-choice.loser {border-color:#d98a8a;background:#fff0f0;color:#814545}
+.vs {text-transform:uppercase;font-size:11px;letter-spacing:.12em;color:#8a9bab}
+.note {background:#fff6dc;border-color:#eedca3;border-radius:12px;color:#6a541e;font-size:13px}
+.pause {background:#fdf0ef;border-top-color:#efc8c8;color:#944849;font-size:13px}
+.game-type-select {font-weight:720;border-radius:11px}
+.machine-info {border-radius:12px;font-size:13px}
+.data-table-wrap {
+  width:100%;
+  max-width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  border:1px solid #dfe8f0;
+  border-radius:15px;
+  background:#fff;
+}
+.data-table-wrap:focus-visible {outline:3px solid #dbb356;outline-offset:2px}
+.data-table-wrap table {width:100%;border:0;border-radius:0;overflow:visible}
+.data-table-wrap.wide-table table {min-width:880px}
+table {font-size:13px}
+th,td {padding:11px 11px;border-bottom:1px solid #e8edf3}
+th {background:#eef3f9;color:#3a556d;font-size:12px;letter-spacing:.006em;font-weight:800}
+tbody tr:nth-child(even) td {background:#fbfcff}
+.money {white-space:nowrap;font-weight:690}
+.pay-input {border:1px solid #d6e2ed;border-radius:11px;width:94px;background:#fff;min-height:38px}
+.extra-positive {color:#22814d;font-weight:850}
+.history-item {
+  background:#f9fbfe;
+  border:1px solid #e1e9f2;
+  border-radius:15px;
+  padding:15px;
+}
+.history-item strong {color:#1e3c57}
+.team-card {background:#f9fbfe;border-color:#dfe8f0;border-radius:17px;padding:15px}
+.fixture {border-radius:15px;background:#f7f9fc;border-color:#e0e6ef}
+.fixture.planned {background:#f7f9fc}
+.fixture.active {background:#fff9e8}
+.fixture.done {background:#effaf3}
+.round-friendly {border-color:#e0e8f0;border-radius:17px}
+@media (max-width:760px) {
+  header {min-height:68px;padding:10px 14px;gap:9px;font-size:20px}
+  header img {width:45px;height:45px;border-radius:13px}
+  main {padding:14px 11px 26px}
+  .card {padding:17px 15px;margin-bottom:13px;border-radius:18px}
+  h2 {font-size:19px}
+  h2::after {margin-top:8px}
+  .app-switch {margin-bottom:14px;border-radius:16px}
+  .app-switch button {min-height:47px;font-size:13px;padding:8px 7px}
+  .summary-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .summary-grid > .summary-box:last-child:nth-child(odd){grid-column:1/-1}
+  .summary-box {padding:12px}
+  .summary-box strong {font-size:23px}
+  .players {grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .player {min-width:0;padding:9px 10px;min-height:54px;font-size:14px;gap:6px}
+  .player-actions {gap:4px}
+  .remove {font-size:11px;padding:5px 7px;min-height:31px}
+  .actions,.guest-row,.grid2,.grid3,.result {grid-template-columns:1fr}
+  .game {padding:12px}
+  .game-title {align-items:flex-start}
+  .match {grid-template-columns:1fr;gap:7px}
+  .team-selects {grid-template-columns:1fr 1fr}
+  .round-head {padding:12px 13px;font-size:13px;gap:8px}
+  .data-table-wrap.wide-table table {min-width:870px}
+  .data-table-wrap {position:relative}
+  .history-head {align-items:flex-start;flex-wrap:wrap}
+  .friendly-grid,.fixture-match,.fixture-actions,.scorebox {grid-template-columns:1fr}
+}
+@media (max-width:370px) {
+  .players {grid-template-columns:1fr}
+  .summary-grid {grid-template-columns:1fr}
+  .summary-grid > .summary-box:last-child:nth-child(odd){grid-column:auto}
+  .round-head {flex-wrap:wrap}
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after {transition:none!important;scroll-behavior:auto!important}
+}
+@media print {
+  body {background:#fff!important;color:#000!important}
+  header {position:static;background:#fff!important;color:#000!important;border-bottom:2px solid #000;box-shadow:none}
+  header::after {display:none!important}
+  .card {box-shadow:none!important;border:1px solid #aaa!important;background:#fff!important;color:#000!important;break-inside:avoid}
+  .card h2 {color:#000!important}
+  #trainingView > section.card:first-child .small,#trainingView > section.card:first-child .summary-box span,#trainingView > section.card:first-child .summary-box strong {color:#000!important}
+  .data-table-wrap {overflow:visible;border:0}
+  .data-table-wrap.wide-table table {min-width:0}
+  .game,.fixture,.round-head,.summary-box {background:#fff!important;color:#000!important;box-shadow:none!important}
+  .no-print,.card.players-card,.card.controls-card,.card.history-card {display:none!important}
+}
+
+
+/* Gemeinschaftsspiele: leicht verständliche Zusatzabrechnung */
+.community-card{background:linear-gradient(145deg,#fff,#f7faff)}
+.community-intro{margin:-2px 0 14px}
+.community-players{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin:12px 0}
+.community-person{display:flex;align-items:center;gap:9px;padding:10px 11px;border:1px solid #dfe7ef;background:#fff;border-radius:13px;cursor:pointer;font-weight:750;min-height:47px}
+.community-person:has(input:checked){background:#e9f5ed;border-color:#7ab68c;color:#1b603c}
+.community-person input{accent-color:#2d7650;width:18px;height:18px;flex-shrink:0}
+.community-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:11px;align-items:end}
+.community-preview{border:1px solid #c5d9e9;border-radius:13px;background:#edf5fb;color:#173e5e;padding:12px 14px;font-weight:800;margin:12px 0;line-height:1.45}
+.community-entry{border:1px solid #dce6ef;border-radius:14px;padding:12px 14px;margin:9px 0;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.community-entry strong{display:block;font-size:15px;color:#17344c}
+.community-entry .small{margin-top:3px}
+.community-entry button{min-height:38px;padding:8px 12px;font-size:13px}
+.community-helper{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 0 0}
+.community-helper button{min-height:34px;padding:6px 10px;font-size:13px}
+@media(max-width:640px){.community-controls{grid-template-columns:1fr}.community-players{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v27</span></header>
+<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v30</span></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
@@ -170,23 +568,41 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </section>
 
 <section class="card controls-card">
-<h2>2. Spielart & Auslosung</h2>
+<h2>2. Spiele auslosen</h2>
 <div id="overallStatus" class="status-top done">Noch keine Runde gestartet</div>
-<div class="tabs">
-<button id="einzelBtn" class="tab active" onclick="setMode('einzel')">Einzel</button>
-<button id="doppelBtn" class="tab" onclick="setMode('doppel')">Doppel</button>
-<button id="mixedBtn" class="tab" onclick="setMode('mixed')">Gemischt / frei</button>
-</div>
+<div class="simple-draw"><label for="drawStyle"><strong>Was möchtest du spielen?</strong></label><select id="drawStyle" onchange="setMode(this.value)"><option value="mixed">🎲 Automatisch – App entscheidet</option><option value="einzel">🎯 Nur Einzel</option><option value="doppel">👥 Nur Doppel</option></select></div>
 <div class="actions" style="margin-top:10px">
-<button id="drawBtn" class="primary" onclick="drawRound()">Nächste freie Partie / Runde auslosen</button>
+<button id="drawBtn" class="primary" onclick="drawRound()">🎲 Jetzt auslosen</button>
 <button class="light" onclick="undoRound()">Letzte Runde löschen</button>
 </div>
-<p class="small"><strong>Zwei Automaten:</strong> Im Modus „Gemischt / frei“ kannst du pro Automat Einzel oder Doppel wählen und die Spieler danach individuell ändern. Bei 6 Spielern kann die App automatisch 1 Doppel + 1 Einzel vorschlagen. Wird ein Automat früher frei, kannst du dort sofort ein weiteres Einzel starten, ohne auf das andere Spiel zu warten.</p>
+<p class="small">Automatisch nutzt die freien Automaten und Spieler. Bei 6 Spielern: 1 Doppel + 1 Einzel. Spielart und Spieler kannst du danach noch ändern. Sobald ein Automat frei ist, kannst du direkt erneut auslosen.</p>
 </section>
 
 <section class="card">
 <h2>3. Spiele & Ergebnisse</h2>
 <div id="rounds"></div>
+</section>
+
+<section class="card community-card no-print" id="communityArea">
+<h2>👥 Gemeinschaftsspiel abrechnen</h2>
+<p class="small community-intro">Wenn mehrere Spieler gemeinsam an einem Automaten spielen, kannst du die Kosten hier direkt buchen – ohne Auslosung. Die normale Einzel-/Doppel-Abrechnung bleibt unverändert.</p>
+<div class="community-helper">
+<strong>Wer hat mitgespielt?</strong>
+<button type="button" class="light" onclick="selectPresentCommunityPlayers()">Alle Anwesenden wählen</button>
+</div>
+<div id="communityPlayers" class="community-players"></div>
+<div class="community-controls">
+<label><span class="small">Ergebnis / gespielte Legs</span>
+<select id="communityLegs" onchange="updateCommunityPreview()">
+<option value="2">2:0 oder 0:2 – 2 Legs (1,00 € pro Spieler)</option>
+<option value="3">2:1 oder 1:2 – 3 Legs (1,50 € pro Spieler)</option>
+</select></label>
+<button type="button" class="primary" onclick="addCommunityGame()">＋ Gemeinschaftsspiel hinzufügen</button>
+</div>
+<div id="communityPreview" class="community-preview" aria-live="polite"></div>
+<h3>Erfasste Gemeinschaftsspiele</h3>
+<div id="communityGamesList"></div>
+<p class="small">Diese Spiele erhöhen ausschließlich die Kosten der ausgewählten Spieler. Sie verändern keine Siege, Niederlagen oder Auslosungen. Du kannst mehrere Gemeinschaftsspiele hinzufügen.</p>
 </section>
 
 <section class="card">
@@ -200,7 +616,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <section class="card">
 <h2>5. Tagesrangliste & Abrechnung</h2><p class="small">Bei „Bezahlt“ trägst du ein, was der Spieler tatsächlich gegeben hat. Alles über dem Soll wird automatisch als Mannschaftskasse gerechnet.</p>
-<table>
+<div class="data-table-wrap wide-table" tabindex="0" role="region" aria-label="Abrechnungstabelle, horizontal scrollbar"><table>
 <thead><tr><th>Rang</th><th>Spieler</th><th>Spiele</th><th>S</th><th>N</th><th>Legs</th><th>Quote</th><th>Pausen</th><th class="money">Soll</th><th class="money">Bezahlt</th><th class="money">Mannschaftskasse</th></tr></thead>
 <tbody id="billing"></tbody>
 <tfoot>
@@ -208,7 +624,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <tr><th colspan="9">Tatsächlich bezahlt</th><th id="paidTotal" class="money">0,00 €</th><th></th></tr>
 <tr><th colspan="10">Davon Mannschaftskasse</th><th id="teamCashTotal" class="money">0,00 €</th></tr>
 </tfoot>
-</table>
+</table></div>
 </section>
 
 <section class="card no-print">
@@ -237,10 +653,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </select></label>
 <div class="summary-box"><span>Gespeicherte Trainingstage</span><strong id="archiveCount">0</strong></div>
 </div>
-<table style="margin-top:10px">
+<div class="data-table-wrap wide-table" tabindex="0" role="region" aria-label="Abrechnungstabelle, horizontal scrollbar"><table style="margin-top:10px">
 <thead><tr><th>Rang</th><th>Spieler</th><th>Spiele</th><th>Siege</th><th>Niederlagen</th><th>Legs</th><th>Quote</th><th class="money">Bezahlt</th></tr></thead>
 <tbody id="longRanking"></tbody>
-</table>
+</table></div>
 </section>
 
 </div>
@@ -286,19 +702,19 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="friendly-grid">
 <div>
 <h3>DC Hunters</h3>
-<table>
+<div class="data-table-wrap" tabindex="0" role="region" aria-label="Abrechnungstabelle, horizontal scrollbar"><table>
 <thead><tr><th>Spieler</th><th>Spiele</th><th class="money">Zu zahlen</th></tr></thead>
 <tbody id="fHomeBilling"></tbody>
 <tfoot><tr><th colspan="2">Summe Heim</th><th id="fHomeTotal" class="money">0,00 €</th></tr></tfoot>
-</table>
+</table></div>
 </div>
 <div>
 <h3>Gastmannschaft</h3>
-<table>
+<div class="data-table-wrap" tabindex="0" role="region" aria-label="Abrechnungstabelle, horizontal scrollbar"><table>
 <thead><tr><th>Spieler</th><th>Spiele</th><th class="money">Zu zahlen</th></tr></thead>
 <tbody id="fGuestBilling"></tbody>
 <tfoot><tr><th colspan="2">Summe Gast</th><th id="fGuestTotal" class="money">0,00 €</th></tr></tfoot>
-</table>
+</table></div>
 </div>
 </div>
 <div class="summary-box" style="margin-top:12px"><span>Gesamtsumme Freundschaftsspiel</span><strong id="fGrandTotal">0,00 €</strong></div>
@@ -329,8 +745,8 @@ function writeTrainingArchive(entries){
  }
 }
 
-const LEGACY_KEYS=["dc-hunters-v27","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
-let mode="einzel";
+const LEGACY_KEYS=["dc-hunters-v28","dc-hunters-v18","dc-hunters-v17","dc-hunters-v16","dc-hunters-v15","dc-hunters-v14","dc-hunters-v13","dc-hunters-v12","dc-hunters-v11","dc-hunters-v10"];
+let mode="mixed";
 
 function loadMainState(){
  let saved=null;
@@ -368,6 +784,7 @@ if(dedicatedTrainingArchive.length){
 
 if(!state.history)state.history={opponents:{},pauses:{}};
 if(!state.payments)state.payments={};
+if(!Array.isArray(state.communityGames))state.communityGames=[];
 if(!state.players)state.players=[...basePlayers];
 if(!state.guests)state.guests=[];
 if(!state.present)state.present=Object.fromEntries(allPlayers().map(n=>[n,true]));
@@ -390,9 +807,9 @@ function opponentCount(a,b){return state.history.opponents[pairKey(a,b)]||0}
 function addOpponent(a,b){const k=pairKey(a,b);state.history.opponents[k]=(state.history.opponents[k]||0)+1}
 function setMode(m){
  mode=m;
- einzelBtn.classList.toggle("active",m==="einzel");
- doppelBtn.classList.toggle("active",m==="doppel");
- mixedBtn.classList.toggle("active",m==="mixed");
+ const sel=document.getElementById("drawStyle");
+ if(sel)sel.value=m;
+ renderBilling();
 }
 function updatePresentCount(){presentCount.textContent=allPlayers().filter(n=>state.present[n]!==false).length}
 
@@ -404,7 +821,7 @@ function addGuest(){
  persist();renderAll();
 }
 function removeGuest(name){
- if(state.rounds.some(r=>r.games.some(g=>g.players.includes(name)))){alert("Gast ist schon in einer Runde. Erst neuen Trainingstag starten.");return}
+ if(state.rounds.some(r=>r.games.some(g=>g.players.includes(name)))||(state.communityGames||[]).some(g=>g.players.includes(name))){alert("Gast ist bereits an einem Spiel beteiligt. Erst den Trainingstag neu starten oder das Gemeinschaftsspiel löschen.");return}
  state.guests=state.guests.filter(n=>n!==name);delete state.present[name];delete state.history.pauses[name];
  persist();renderAll();
 }
@@ -420,6 +837,7 @@ function renderPlayers(){
   players.appendChild(label);
  });
  updatePresentCount();
+ renderCommunityPlayers();
 }
 function bestPairing(list){
  let best=null;
@@ -501,6 +919,26 @@ function activeTrainingPlayers(){
  }));
  return used;
 }
+function randomInt(max){
+ if(globalThis.crypto&&crypto.getRandomValues){
+  const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%max;
+ }
+ return Math.floor(Math.random()*max);
+}
+function shufflePlayers(names){
+ const arr=[...names];
+ for(let i=arr.length-1;i>0;i--){const j=randomInt(i+1);[arr[i],arr[j]]=[arr[j],arr[i]];}
+ return arr;
+}
+function randomBestDouble(pool){
+ let best=null;
+ for(let t=0;t<450;t++){
+  const s=shufflePlayers(pool).slice(0,4);
+  const score=opponentCount(s[0],s[2])+opponentCount(s[0],s[3])+opponentCount(s[1],s[2])+opponentCount(s[1],s[3]);
+  if(!best||score<best.score||(score===best.score&&randomInt(2)===0))best={players:s,score};
+ }
+ return best&&best.players;
+}
 function chooseBestSinglePair(names){
  if(names.length<2)return null;
  let best=null;
@@ -508,7 +946,7 @@ function chooseBestSinglePair(names){
   for(let j=i+1;j<names.length;j++){
    const a=names[i],b=names[j];
    const score=opponentCount(a,b)*20 + (state.history.pauses[a]||0) + (state.history.pauses[b]||0);
-   if(!best||score<best.score)best={players:[a,b],score};
+   if(!best||score<best.score||(score===best.score&&randomInt(2)===0))best={players:randomInt(2)?[a,b]:[b,a],score};
   }
  }
  return best&&best.players;
@@ -557,13 +995,13 @@ function freeTrainingPlayers(){
  return allPlayers().filter(n=>state.present[n]!==false&&!busy.has(n));
 }
 function drawRound(){
- const machines=freeMachines();
+ const machines=shufflePlayers(freeMachines());
  if(!machines.length){
   alert("Beide Automaten sind noch belegt. Sobald ein Automat frei ist, kannst du die nächste Runde auslosen.");
   return;
  }
 
- const present=freeTrainingPlayers();
+ const present=shufflePlayers(freeTrainingPlayers());
 
  if(mode==="einzel"&&present.length<2){
   alert("Für ein weiteres Einzel sind aktuell keine zwei freien Spieler verfügbar.");
@@ -595,15 +1033,10 @@ function drawRound(){
   let pool=[...present];
   for(let k=0;k<maxGames && pool.length>=4;k++){
    // random/fair four-player block, preserving existing opponent avoidance approximately
-   let best=null;
-   for(let t=0;t<500;t++){
-    const s=[...pool].sort(()=>Math.random()-.5).slice(0,4);
-    const score=opponentCount(s[0],s[2])+opponentCount(s[0],s[3])+opponentCount(s[1],s[2])+opponentCount(s[1],s[3]);
-    if(!best||score<best.score)best={players:s,score};
-   }
-   if(!best)break;
-   games.push({type:"doppel",players:best.players,result:"",machine:machines[k]});
-   pool=pool.filter(n=>!best.players.includes(n));
+   const four=randomBestDouble(pool);
+   if(!four)break;
+   games.push({type:"doppel",players:four,result:"",machine:machines[k]});
+   pool=pool.filter(n=>!four.includes(n));
   }
   pauses=pool;
  }else{
@@ -611,14 +1044,9 @@ function drawRound(){
 
   if(maxGames===2 && pool.length>=6){
    // Default: one double + one single across both free machines.
-   let bestD=null;
-   for(let t=0;t<700;t++){
-    const s=[...pool].sort(()=>Math.random()-.5).slice(0,4);
-    const score=opponentCount(s[0],s[2])+opponentCount(s[0],s[3])+opponentCount(s[1],s[2])+opponentCount(s[1],s[3]);
-    if(!bestD||score<bestD.score)bestD={players:s,score};
-   }
-   games.push({type:"doppel",players:bestD.players,result:"",machine:machines[0]});
-   pool=pool.filter(n=>!bestD.players.includes(n));
+   const four=randomBestDouble(pool);
+   games.push({type:"doppel",players:four,result:"",machine:machines[0]});
+   pool=pool.filter(n=>!four.includes(n));
    const pair=chooseBestSinglePair(pool);
    if(pair){
     games.push({type:"einzel",players:pair,result:"",machine:machines[1]});
@@ -636,6 +1064,8 @@ function drawRound(){
   }
   pauses=pool;
  }
+
+ games.forEach(g=>{if(randomInt(2)===0){if(g.type==="einzel")g.players.reverse();else g.players=[...g.players.slice(2),...g.players.slice(0,2)];}});
 
  if(!games.length){
   alert("Mit den aktuell freien Spielern kann keine weitere Partie ausgelost werden.");
@@ -774,7 +1204,7 @@ function winnerSlots(r,g){
 function winnerSlots(r,g){
  if(!g.result)return{w:[],l:[]};
  const left=g.result==="2:0"||g.result==="2:1";
- if(r.mode==="einzel")return left?{w:[0],l:[1]}:{w:[1],l:[0]};
+ if((g.type||r.mode)==="einzel")return left?{w:[0],l:[1]}:{w:[1],l:[0]};
  return left?{w:[0,1],l:[2,3]}:{w:[2,3],l:[0,1]};
 }
 function renderRounds(){
@@ -807,7 +1237,7 @@ function renderRounds(){
    const sc=done?"done":isNext?"next":"open";
 
    let config='<div class="game-config"><strong>Automat '+machine+'</strong>';
-   if(r.mode==="mixed"&&!g.followUp){
+   if(!g.followUp){
     config+='<select class="game-type-select" data-type><option value="einzel" '+(type==="einzel"?"selected":"")+'>Einzel</option><option value="doppel" '+(type==="doppel"?"selected":"")+'>Doppel</option></select>';
    }else{
     config+='<span class="badge">'+(type==="einzel"?"Einzel":"Doppel")+'</span>';
@@ -871,6 +1301,89 @@ function renderRounds(){
   rounds.appendChild(box);
  });
 }
+
+// Gemeinschaftsspiele werden nur finanziell erfasst, ohne die Dart-Rangliste zu beeinflussen.
+function communityCostPerPlayer(game){
+ return (Number(game.legs)===3?3:2)*0.5;
+}
+function selectedCommunityPlayers(){
+ return [...document.querySelectorAll('#communityPlayers input[type="checkbox"]:checked')].map(x=>x.value);
+}
+function renderCommunityPlayers(){
+ const container=document.getElementById('communityPlayers');
+ if(!container)return;
+ const savedSelection=new Set(selectedCommunityPlayers());
+ const initial=container.dataset.initialized!=='yes';
+ container.replaceChildren();
+ allPlayers().filter(n=>state.present[n]!==false).forEach(n=>{
+  const label=document.createElement('label');
+  label.className='community-person';
+  const cb=document.createElement('input');
+  cb.type='checkbox';
+  cb.value=n;
+  cb.checked=initial?true:savedSelection.has(n);
+  cb.onchange=updateCommunityPreview;
+  const span=document.createElement('span');
+  span.textContent=n;
+  label.append(cb,span);
+  container.appendChild(label);
+ });
+ container.dataset.initialized='yes';
+ updateCommunityPreview();
+}
+function selectPresentCommunityPlayers(){
+ document.querySelectorAll('#communityPlayers input[type="checkbox"]').forEach(x=>x.checked=true);
+ updateCommunityPreview();
+}
+function updateCommunityPreview(){
+ const count=selectedCommunityPlayers().length;
+ const legs=Number(document.getElementById('communityLegs').value)===3?3:2;
+ const cost=legs*0.5;
+ const total=count*cost;
+ const target=document.getElementById('communityPreview');
+ if(target)target.textContent=count+' Spieler × '+euro(cost)+' = '+euro(total)+' · '+legs+' Legs';
+}
+function addCommunityGame(){
+ const names=[...new Set(selectedCommunityPlayers())];
+ if(names.length<2){alert('Bitte mindestens zwei Teilnehmer auswählen.');return;}
+ const legs=Number(document.getElementById('communityLegs').value)===3?3:2;
+ state.communityGames.push({id:Date.now()+Math.random(),players:names,legs});
+ if(!persist()){
+  state.communityGames.pop();
+  return;
+ }
+ renderAll();
+}
+function deleteCommunityGame(id){
+ if(!confirm('Dieses Gemeinschaftsspiel aus der Abrechnung entfernen?'))return;
+ state.communityGames=state.communityGames.filter(g=>String(g.id)!==String(id));
+ persist();
+ renderAll();
+}
+function renderCommunityGames(){
+ const container=document.getElementById('communityGamesList');
+ if(!container)return;
+ container.replaceChildren();
+ const list=state.communityGames||[];
+ if(!list.length){
+  const p=document.createElement('p');
+  p.className='small';p.textContent='Noch kein Gemeinschaftsspiel erfasst.';
+  container.appendChild(p);return;
+ }
+ list.forEach((g,i)=>{
+  const row=document.createElement('div');row.className='community-entry';
+  const left=document.createElement('div');
+  const title=document.createElement('strong');
+  title.textContent='Gemeinschaftsspiel '+(i+1)+' · '+g.legs+' Legs · '+euro((g.players||[]).length*communityCostPerPlayer(g));
+  const desc=document.createElement('div');desc.className='small';
+  desc.textContent=(g.players||[]).join(', ')+' · '+euro(communityCostPerPlayer(g))+' je Spieler';
+  left.append(title,desc);
+  const btn=document.createElement('button');btn.className='light';btn.type='button';
+  btn.textContent='Entfernen';btn.onclick=()=>deleteCommunityGame(g.id);
+  row.append(left,btn);container.appendChild(row);
+ });
+}
+
 function calculate(){
  const b=Object.fromEntries(allPlayers().map(n=>[n,{games:0,wins:0,losses:0,legs:0,cost:0,pauses:state.history.pauses[n]||0}]));
  let completed=0;
@@ -901,6 +1414,14 @@ function calculate(){
    losers.filter(Boolean).forEach(p=>b[p].losses++);
   }
  }));
+ (state.communityGames||[]).forEach(group=>{
+  const cost=communityCostPerPlayer(group);
+  [...new Set(group.players||[])].forEach(n=>{
+   if(!b[n])b[n]={games:0,wins:0,losses:0,legs:0,cost:0,pauses:0};
+   b[n].cost+=cost;
+  });
+  completed++;
+ });
  return{players:b,completed};
 }
 function rankedRows(data){
@@ -980,6 +1501,7 @@ function snapshot(){
   date:trainingDate.value||todayISO(),
   savedAt:new Date().toISOString(),
   rounds:JSON.parse(JSON.stringify(state.rounds)),
+  communityGames:JSON.parse(JSON.stringify(state.communityGames||[])),
   stats:c.players,
   payments:JSON.parse(JSON.stringify(state.payments||{})),
   total:Object.values(c.players).reduce((s,x)=>s+x.cost,0),
@@ -987,7 +1509,7 @@ function snapshot(){
  };
 }
 function archiveDay(){
- if(!state.rounds.length){alert("Noch keine Runden vorhanden.");return;}
+ if(!state.rounds.length&&!(state.communityGames||[]).length){alert("Noch keine Spiele vorhanden.");return;}
  if(unfinishedRounds().length && !confirm("Es sind noch Spiele offen oder vorausgelost. Trainingstag trotzdem speichern?"))return;
 
  const snap=JSON.parse(JSON.stringify(snapshot()));
@@ -1057,6 +1579,7 @@ function loadArchive(i){
  if(!confirm("Diesen gespeicherten Trainingstag öffnen?"))return;
 
  state.rounds=JSON.parse(JSON.stringify(x.rounds||[]));
+ state.communityGames=JSON.parse(JSON.stringify(x.communityGames||[]));
  state.payments=JSON.parse(JSON.stringify(x.payments||{}));
  state.activeDate=x.date||todayISO();
  trainingDate.value=state.activeDate;
@@ -1068,6 +1591,7 @@ function loadArchive(i){
   (r.games||[]).forEach(g=>(g.players||[]).forEach(n=>names.add(n)));
   (r.pauses||[]).forEach(n=>names.add(n));
  });
+ (x.communityGames||[]).forEach(g=>(g.players||[]).forEach(n=>names.add(n)));
  names.forEach(n=>{
   if(!state.players.includes(n)&&!state.guests.includes(n))state.guests.push(n);
   if(!(n in state.present))state.present[n]=true;
@@ -1124,6 +1648,15 @@ function pdfLinesFromSnapshot(snap){
   if(r.pauses.length)lines.push("  Pause: "+r.pauses.join(", "));
   lines.push("");
  });
+ if((snap.communityGames||[]).length){
+  lines.push('GEMEINSCHAFTSSPIELE');
+  snap.communityGames.forEach((g,i)=>{
+   const cost=communityCostPerPlayer(g);
+   lines.push((i+1)+'. '+g.legs+' Legs | '+(g.players||[]).length+' Teilnehmer | je '+euro(cost)+' | Gesamt '+euro((g.players||[]).length*cost));
+   lines.push('   '+(g.players||[]).join(', '));
+  });
+  lines.push('');
+ }
  lines.push("ABRECHNUNG / STATISTIK");
  let paidSum=0,teamCashSum=0;
  const pays=snap.payments||{};
@@ -1266,7 +1799,7 @@ async function exportArchivePDF(i){
 }
 function resetDay(){
  if(!confirm("Aktuellen Trainingstag löschen und neu starten?"))return;
- state.rounds=[];state.payments={};state.history={opponents:{},pauses:Object.fromEntries(allPlayers().map(n=>[n,0]))};trainingDate.value=todayISO();persist();renderAll();
+ state.rounds=[];state.communityGames=[];state.payments={};state.history={opponents:{},pauses:Object.fromEntries(allPlayers().map(n=>[n,0]))};trainingDate.value=todayISO();persist();renderAll();
 }
 
 function showAppView(v){
@@ -1524,7 +2057,7 @@ function friendlyPdfLines(){
 }
 async function exportFriendlyPDF(){if(!friendly.fixtures.length){alert("Bitte zuerst einen Spielplan erstellen.");return}persistFriendly();await createSimplePDF(friendlyPdfLines(),"DC_Hunters_Freundschaft_"+(fDate.value||todayISO())+".pdf")}
 
-function renderAll(){renderPlayers();renderRounds();renderBilling();renderHistory();renderLongTermRanking();renderFriendlyRoster();renderFriendly();renderFriendlyArchive()}
+function renderAll(){renderPlayers();renderRounds();renderCommunityGames();renderBilling();renderHistory();renderLongTermRanking();renderFriendlyRoster();renderFriendly();renderFriendlyArchive()}
 
 trainingDate.value=state.activeDate||todayISO();trainingDate.onchange=()=>{state.activeDate=trainingDate.value;persist()};
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
