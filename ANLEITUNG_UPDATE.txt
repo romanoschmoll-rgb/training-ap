@@ -1,17 +1,21 @@
-DC Hunters v30 – Gemeinschaftsspiele abrechnen
+DC Hunters v31 – Gemeinschaftsspiele & Design
 
-NEU: Unter „Spiele & Ergebnisse“ gibt es den Bereich „Gemeinschaftsspiel abrechnen“.
+NEU GEMEINSCHAFTSSPIELE:
+- Kein Ergebnis (2:0/2:1) mehr.
+- Anzahl der Spiele auswählen: jedes Spiel kostet 0,50 EUR je Teilnehmer.
+- Alle Vereinsmitglieder UND Gäste auswählen, auch abwesende Spieler.
+- Aktionen Anwesende / Alle / Keine.
+- Sofortige Kostenvorschau mit Betrag pro Person und gesamt.
+- Speichern, Archiv, Wiederöffnen und PDF verwenden die Spielanzahl.
+- Vorhandene v30-Einträge werden zum bisherigen Preis beibehalten.
 
-- Teilnehmer antippen (standardmäßig alle anwesenden Spieler).
-- 2 Legs / 2:0 oder 0:2 = 1,00 EUR je Teilnehmer.
-- 3 Legs / 2:1 oder 1:2 = 1,50 EUR je Teilnehmer.
-- „Gemeinschaftsspiel hinzufügen“ buchen – mehrere Einträge möglich.
-- Kosten werden automatisch in Soll pro Spieler und Gesamtsumme berücksichtigt.
-- „Bezahlt“ und Mannschaftskasse funktionieren weiter wie bisher.
-- Die Gruppenspiele zählen nicht als Sieg/Niederlage in der Dart-Rangliste.
-- Gruppenspiele werden im Trainingsarchiv mitgespeichert, wiederhergestellt und in PDF angezeigt.
-- Bereits bestehende Trainingsarchive bleiben lesbar.
-- Speicher-Schlüssel für Trainings- und Freundschaftsdaten sind unverändert.
+NEUES DESIGN:
+- Modernes Dunkelblau/Gold mit grünen Akzenten.
+- Schnellnavigation, aufgeräumte Karten, klarere Bedienung und größere Kostenanzeige.
+- Optimiert für Handy und Tablet.
 
-Auf GitHub alle Dateien der ZIP ersetzen; danach muss oben „v30“ stehen.
-Achtung: Die Daten bleiben weiterhin lokal pro Gerät gespeichert – kein Cloud-Sync.
+Nicht verändert: Spielpaarungen, Trainingsauslosung, Einzel-/Doppel-Kosten,
+Zahlungs-/Mannschaftskassenlogik, Freundschaftsspiele und lokale Speicherschlüssel.
+
+GitHub: ZIP auspacken und alle enthaltenen Dateien hochladen/ersetzen.
+Oben muss danach v31 stehen. Daten nicht löschen.

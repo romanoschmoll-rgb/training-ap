@@ -538,16 +538,181 @@ tbody tr:nth-child(even) td {background:#fbfcff}
 .community-helper{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 0 0}
 .community-helper button{min-height:34px;padding:6px 10px;font-size:13px}
 @media(max-width:640px){.community-controls{grid-template-columns:1fr}.community-players{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* === v31 interface refresh: design only apart from the community receipt UI === */
+:root{
+ --bg:#edf3f8;--card:#ffffff;--dark:#10293f;--dark2:#234b69;
+ --gold:#e4af47;--gold2:#ffe6aa;--line:#d9e4ed;--text:#183047;
+ --muted:#627b90;--shadow:0 8px 34px rgba(12,42,67,.07),0 1px 5px rgba(12,42,67,.035)
+}
+body{
+ background:radial-gradient(ellipse 900px 490px at 100% 0%,rgba(159,207,229,.28),transparent 72%),
+            linear-gradient(180deg,#f4f8fc 0%,#edf3f8 55%,#eaf1f7 100%);
+ letter-spacing:-.005em;
+}
+header{
+ min-height:88px;background:linear-gradient(115deg,#081b2a 0%,#102f49 60%,#1d4e64 100%);
+ border:0;gap:15px;box-shadow:0 8px 30px rgba(7,29,46,.21);
+}
+header::after{height:3px;background:linear-gradient(90deg,#d39c34 0%,#ffdf91 52%,#6cbaa9 100%)}
+header img{width:56px;height:56px;border-radius:17px}
+.brand-text{display:flex;flex-direction:column;gap:3px}
+.brand-title{font-size:24px;line-height:1.1;font-weight:900;display:flex;align-items:center;gap:10px;letter-spacing:-.045em}
+.brand-subtitle{font-size:10px;line-height:1.4;letter-spacing:.15em;font-weight:800;color:#adc6d9}
+header .version{font-size:11px;letter-spacing:.03em;font-weight:850}
+main{max-width:1196px;padding:23px 18px 56px}
+.app-switch{border:1px solid #deebf2;background:#fff;border-radius:18px;padding:6px;margin-bottom:14px}
+.app-switch button{font-size:15px;letter-spacing:0;border-radius:12px}
+.app-switch .active{background:linear-gradient(125deg,#112e45,#22536c)}
+.quick-nav{display:flex;gap:7px;overflow-x:auto;padding:0 1px 11px;margin-bottom:14px;scrollbar-width:thin;white-space:nowrap;scroll-margin-top:95px}
+.quick-nav a{flex:none;text-decoration:none;padding:9px 13px;color:#36566d;background:#fff;border:1px solid #deebf2;border-radius:999px;font-size:12px;font-weight:780;box-shadow:0 2px 8px rgba(29,63,87,.03)}
+.quick-nav a:hover,.quick-nav a:focus-visible{background:#e7f3f8;border-color:#a8c8d6;outline:none}
+.quick-nav a.nav-highlight{background:#e8f5ee;color:#166b52;border-color:#c1dfd2}
+#playersPanel,#drawPanel,#communityArea,#archivePanel,#roundsPanel,#settlementPanel{scroll-margin-top:104px}
+.card{border-radius:21px;padding:24px 25px;border-color:#deebf2;background:#fff;box-shadow:var(--shadow)}
+.card h2{letter-spacing:-.04em;font-size:21px}
+h2::after{height:3px;width:30px;background:#dcaa44}
+.summary-box{background:#f4f9fc;border-color:#e1ebf2;border-radius:16px}
+.summary-box strong{color:#173c52}
+#trainingView>section.card:first-of-type{position:relative;overflow:hidden;color:#fff;border-radius:22px;background:linear-gradient(115deg,#112d45,#20576d 95%)}
+#trainingView>section.card:first-of-type::before{content:"";position:absolute;width:230px;height:230px;border:1px solid rgba(255,232,165,.19);border-radius:50%;right:-105px;top:-125px;pointer-events:none}
+#trainingView>section.card:first-of-type h2{color:#fff}
+#trainingView>section.card:first-of-type h2::after{background:#ffdc8e}
+#trainingView>section.card:first-of-type .summary-box{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.23)}
+#trainingView>section.card:first-of-type .summary-box span{color:#d7ecf2}
+#trainingView>section.card:first-of-type .summary-box strong{color:#fff}
+#trainingView>section.card:first-of-type label .small{color:#e0eff6}
+.players{gap:10px}
+.player{background:#f8fbfd;border-radius:15px;border-color:#e2edf3;min-height:60px}
+.player.on{background:#e8f6f1;border-color:#9dceb9;box-shadow:inset 3px 0 #39a58a}
+.player input{accent-color:#27866b}
+button.primary{background:linear-gradient(115deg,#ffe7ab,#e4af47);box-shadow:0 5px 15px rgba(204,157,59,.17)}
+button.secondary{background:linear-gradient(120deg,#1b455e,#12344c)}
+button.light{background:#eff5f9;border-color:#e0e9ef}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid rgba(54,157,142,.5);outline-offset:2px}
+.round{box-shadow:0 6px 20px rgba(20,55,78,.045);border-radius:18px}
+.round-head{background:linear-gradient(105deg,#112e45,#235369)}
+.game.game-open{border-left-color:#e3b44f}
+.game.game-done{border-left-color:#33a37c}
+.player-choice.winner{border-color:#4db48c}
+.status-top{border-radius:15px}
+.data-table-wrap{border-radius:15px}
+.history-item{border-radius:16px}
+/* The community area has its own coherent workflow and accents. */
+.community-card{
+ overflow:hidden;position:relative;
+ border:1px solid #c9e0e3;
+ background:linear-gradient(148deg,#fcfefd 0%,#f8fbfd 72%,#f3faf7 100%);
+ box-shadow:0 10px 34px rgba(17,88,93,.072);
+}
+.community-card::before{content:"";position:absolute;right:-70px;top:-115px;width:260px;height:260px;border:1px solid rgba(51,160,131,.12);border-radius:50%;pointer-events:none}
+.section-eyebrow{color:#168268;letter-spacing:.12em;font-size:11px;font-weight:900;margin-bottom:11px;display:flex;gap:8px;align-items:center}
+.eyebrow-dot{width:7px;height:7px;border-radius:50%;background:#28ac8d;box-shadow:0 0 0 4px #d8f0e9}
+.community-title-row{display:flex;gap:15px;align-items:flex-start;justify-content:space-between;margin-bottom:22px}
+.community-title-row h2{margin:0 0 8px;font-size:25px;line-height:1.1}
+.community-title-row h2::after{display:none}
+.community-intro{margin:0;max-width:630px}
+.community-rate{background:#133b4a;color:#fff;border:1px solid #245d63;border-radius:15px;padding:12px 16px;min-width:158px;display:flex;flex-direction:column;align-items:flex-start;box-shadow:0 5px 15px rgba(15,66,73,.12)}
+.community-rate strong{font-size:24px;line-height:1.2;letter-spacing:-.04em;color:#ffdb8d}
+.community-rate span{font-size:11px;font-weight:750;color:#b7dcdb;white-space:nowrap}
+.community-step-head{display:flex;gap:12px;align-items:center;margin:5px 0 14px}
+.community-step-head strong{display:block;font-size:16px;font-weight:850;color:#1b394b}
+.step-number{width:35px;height:35px;min-width:35px;display:grid;place-items:center;border-radius:11px;background:#d9f1e7;border:1px solid #b4dfcd;color:#166e55;font-weight:900;font-size:12px}
+.community-helper{display:flex;gap:9px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 15px}
+.quick-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.community-helper button{min-height:37px;padding:8px 12px;border-radius:9px;font-size:12px;font-weight:790}
+.selection-count{font-size:12px;color:#28705c;background:#e5f5ec;border:1px solid #c6e7d5;border-radius:999px;padding:6px 11px;font-weight:850}
+.community-players{display:block;margin:0 0 19px}
+.community-player-group{margin-bottom:16px}
+.community-group-title{font-size:11px;letter-spacing:.08em;font-weight:880;text-transform:uppercase;color:#6a8291;margin:0 0 9px}
+.community-player-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.community-person{display:flex;gap:9px;align-items:center;min-height:55px;padding:11px 13px;border-radius:13px;background:#fff;border:1px solid #dfe9ef;color:#344e60;cursor:pointer;transition:background .15s ease,border-color .15s ease,transform .12s ease;min-width:0}
+.community-person:hover{border-color:#89c8af;background:#f6fcf9}
+.community-person:has(input:checked){background:#e8f7ef;border-color:#6ac39b;color:#165d45;box-shadow:inset 3px 0 #3cac83}
+.community-person input{flex:0 0 auto;accent-color:#248864;width:20px;height:20px}
+.community-name{overflow-wrap:anywhere;font-size:14px;font-weight:770}
+.community-absent{background:#f7f8fa;color:#788997}
+.community-absent-tag{margin-left:auto;color:#8794a0;font-size:10px;font-weight:700}
+.community-absent:has(input:checked) .community-absent-tag{color:#347862}
+.community-bottom{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:14px;margin:7px 0 14px}
+.community-count-panel{background:#fff;border:1px solid #deeaef;border-radius:17px;padding:16px}
+.community-count-panel .community-step-head{margin:0 0 14px}
+.community-counter{display:flex;align-items:center;gap:7px;width:max-content;max-width:100%}
+.community-counter button{width:49px;min-width:49px;height:49px;min-height:49px;border-radius:12px;border:1px solid #cde1e0;background:#e9f7f3;color:#196c57;font-weight:900;font-size:24px;padding:0}
+.community-counter button:active{background:#cceadd}
+.community-counter input{width:94px;height:49px;min-height:49px;border:1px solid #cddfe7;background:#fff;text-align:center;font-weight:880;font-size:24px;border-radius:12px;color:#1b3f4f;appearance:textfield;-moz-appearance:textfield}
+.community-counter input::-webkit-outer-spin-button,.community-counter input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.community-total-panel{border:1px solid #154459;border-radius:17px;padding:17px 19px;background:linear-gradient(125deg,#102e43,#1b5260);color:#fff;display:flex;flex-direction:column;justify-content:center}
+.total-label{font-size:10px;letter-spacing:.14em;font-weight:870;color:#b9d9dd}
+.community-total-panel>strong{display:block;font-size:36px;line-height:1.15;margin-top:6px;letter-spacing:-.05em;color:#ffe3a0;font-variant-numeric:tabular-nums}
+.community-preview{background:transparent;border:0;color:#d5e9e8;padding:0;margin:9px 0 0;font-size:12px;font-weight:650;line-height:1.6}
+.community-add{width:100%;min-height:55px;font-size:16px!important;letter-spacing:-.02em}
+.community-records{margin-top:25px;border-top:1px solid #dce9eb;padding-top:18px}
+.community-records-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.community-records-title h3{margin:0;font-size:16px}
+.community-entry{background:#fff;border-color:#dfebed;border-radius:14px;padding:12px 13px;gap:12px;display:flex;align-items:center;flex-wrap:wrap}
+.community-entry-index{min-width:33px;height:33px;display:grid;place-items:center;border-radius:10px;background:#e5f3ed;color:#207a5a;font-weight:880;font-size:12px}
+.community-entry-body{flex:1;min-width:180px}
+.community-entry-body strong{font-size:14px;color:#213b49;line-height:1.4}
+.community-entry-body .small{margin-top:4px}
+.community-entry button{border-radius:9px;font-size:12px;min-height:36px;padding:7px 10px}
+.community-empty{padding:17px;border:1px dashed #cbdfe4;border-radius:13px;background:#f7fbfa;color:#748b96;font-size:13px}
+.community-footnote{margin:17px 0 0}
+@media(max-width:940px){.community-player-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){
+ header{min-height:74px;padding:10px 14px}
+ header img{width:48px;height:48px}
+ .brand-title{font-size:21px}
+ .brand-subtitle{font-size:9px;letter-spacing:.09em}
+ main{padding:12px 10px 34px}
+ .quick-nav{margin-bottom:8px;gap:6px}
+ .quick-nav a{padding:9px 11px;font-size:11px}
+ .card{padding:17px 15px;border-radius:17px;margin-bottom:12px}
+ .community-title-row{gap:9px;flex-wrap:wrap}
+ .community-title-row h2{font-size:23px}
+ .community-rate{min-width:0;flex-direction:row;align-items:center;gap:9px;padding:9px 13px}
+ .community-rate strong{font-size:19px}.community-rate span{font-size:11px}
+ .community-step-head strong{font-size:15px}
+ .community-player-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .community-person{padding:9px 8px;min-height:52px;gap:5px}
+ .community-name{font-size:12px}
+ .community-absent-tag{font-size:9px}
+ .community-bottom{grid-template-columns:1fr;gap:9px}
+ .community-count-panel{padding:13px}
+ .community-total-panel{padding:15px 17px}
+ .community-total-panel>strong{font-size:32px}
+ .community-records-title{align-items:flex-start;flex-direction:column;gap:2px}
+}
+@media(max-width:375px){
+ .community-absent-tag{display:none}
+ .community-person{padding:9px 8px}
+ .quick-actions{gap:4px}
+ .community-helper button{padding:7px 9px;font-size:11px}
+}
+@media print{
+ .quick-nav,.community-card{display:none!important}
+ #trainingView>section.card:first-of-type{background:#fff!important;color:#000!important}
+ #trainingView>section.card:first-of-type h2,#trainingView>section.card:first-of-type .summary-box span,#trainingView>section.card:first-of-type .summary-box strong{color:#000!important}
+}
+
 </style>
 </head>
 <body>
-<header><img src="apple-touch-icon.png" alt="">DC Hunters <span class="version">v30</span></header>
+<header><img src="apple-touch-icon.png" alt="DC Hunters Logo"><div class="brand-text"><div class="brand-title">DC Hunters <span class="version">v31</span></div><div class="brand-subtitle">TRAINING · SPIELE · VEREINSKASSE</div></div></header>
 <main>
 <div class="app-switch no-print">
 <button id="trainingViewBtn" class="active" onclick="showAppView('training')">🎯 Training</button>
 <button id="friendlyViewBtn" onclick="showAppView('friendly')">🤝 Freundschaftsspiel</button>
 </div>
 <div id="trainingView">
+<nav class="quick-nav no-print" aria-label="Schnellnavigation Training">
+<a href="#playersPanel">Spieler</a>
+<a href="#drawPanel">Auslosung</a>
+<a href="#roundsPanel">Spiele</a>
+<a class="nav-highlight" href="#communityArea">Gemeinschaft</a>
+<a href="#settlementPanel">Abrechnung</a>
+<a href="#archivePanel">Archiv</a>
+</nav>
 
 <section class="card no-print">
 <h2>Trainingstag</h2>
@@ -557,7 +722,7 @@ tbody tr:nth-child(even) td {background:#fbfcff}
 </div>
 </section>
 
-<section class="card players-card">
+<section class="card players-card" id="playersPanel">
 <h2>1. Spieler & Gäste</h2>
 <div class="guest-row">
 <input id="guestName" type="text" placeholder="Name des Gastes">
@@ -567,7 +732,7 @@ tbody tr:nth-child(even) td {background:#fbfcff}
 <div id="players" class="players"></div>
 </section>
 
-<section class="card controls-card">
+<section class="card controls-card" id="drawPanel">
 <h2>2. Spiele auslosen</h2>
 <div id="overallStatus" class="status-top done">Noch keine Runde gestartet</div>
 <div class="simple-draw"><label for="drawStyle"><strong>Was möchtest du spielen?</strong></label><select id="drawStyle" onchange="setMode(this.value)"><option value="mixed">🎲 Automatisch – App entscheidet</option><option value="einzel">🎯 Nur Einzel</option><option value="doppel">👥 Nur Doppel</option></select></div>
@@ -579,30 +744,50 @@ tbody tr:nth-child(even) td {background:#fbfcff}
 </section>
 
 <section class="card">
-<h2>3. Spiele & Ergebnisse</h2>
+<h2 id="roundsPanel">3. Spiele & Ergebnisse</h2>
 <div id="rounds"></div>
 </section>
 
 <section class="card community-card no-print" id="communityArea">
-<h2>👥 Gemeinschaftsspiel abrechnen</h2>
-<p class="small community-intro">Wenn mehrere Spieler gemeinsam an einem Automaten spielen, kannst du die Kosten hier direkt buchen – ohne Auslosung. Die normale Einzel-/Doppel-Abrechnung bleibt unverändert.</p>
+<div class="section-eyebrow"><span class="eyebrow-dot"></span> EXTRA · VEREINSKASSE</div>
+<div class="community-title-row">
+ <div>
+  <h2>Gemeinschaftsspiel</h2>
+  <p class="small community-intro">Gemeinsam an einem Automaten gespielt? Wähle die Teilnehmer und die Anzahl der Spiele. Keine Ergebnisse nötig.</p>
+ </div>
+ <div class="community-rate"><strong>0,50 €</strong><span>je Spiel & Person</span></div>
+</div>
+<div class="community-step-head"><span class="step-number">01</span><div><strong>Wer hat mitgespielt?</strong><div class="small">Alle Vereinsmitglieder und Gäste sind auswählbar – auch wenn sie nicht als anwesend markiert sind.</div></div></div>
 <div class="community-helper">
-<strong>Wer hat mitgespielt?</strong>
-<button type="button" class="light" onclick="selectPresentCommunityPlayers()">Alle Anwesenden wählen</button>
+ <div class="quick-actions">
+  <button type="button" class="light" onclick="selectPresentCommunityPlayers()">Anwesende</button>
+  <button type="button" class="light" onclick="selectAllCommunityPlayers()">Alle</button>
+  <button type="button" class="light" onclick="clearCommunityPlayers()">Keine</button>
+ </div>
+ <span id="communitySelectionCount" class="selection-count">0 ausgewählt</span>
 </div>
-<div id="communityPlayers" class="community-players"></div>
-<div class="community-controls">
-<label><span class="small">Ergebnis / gespielte Legs</span>
-<select id="communityLegs" onchange="updateCommunityPreview()">
-<option value="2">2:0 oder 0:2 – 2 Legs (1,00 € pro Spieler)</option>
-<option value="3">2:1 oder 1:2 – 3 Legs (1,50 € pro Spieler)</option>
-</select></label>
-<button type="button" class="primary" onclick="addCommunityGame()">＋ Gemeinschaftsspiel hinzufügen</button>
+<div id="communityPlayers" class="community-players" aria-label="Teilnehmer des Gemeinschaftsspiels"></div>
+<div class="community-bottom">
+ <div class="community-count-panel">
+  <div class="community-step-head"><span class="step-number">02</span><div><strong>Wie viele Spiele?</strong><div class="small">Ein Spiel kostet 0,50 € pro Spieler.</div></div></div>
+  <div class="community-counter">
+   <button type="button" onclick="adjustCommunityGameCount(-1)" aria-label="Ein Spiel weniger">−</button>
+   <input id="communityGameCount" type="number" min="1" max="99" step="1" inputmode="numeric" value="1" oninput="updateCommunityPreview()" aria-label="Anzahl der Gemeinschaftsspiele">
+   <button type="button" onclick="adjustCommunityGameCount(1)" aria-label="Ein Spiel mehr">+</button>
+  </div>
+ </div>
+ <div class="community-total-panel" aria-live="polite">
+  <div class="total-label">ERGIBT INSGESAMT</div>
+  <strong id="communityPreviewTotal">0,00 €</strong>
+  <div id="communityPreview" class="community-preview">Teilnehmer wählen</div>
+ </div>
 </div>
-<div id="communityPreview" class="community-preview" aria-live="polite"></div>
-<h3>Erfasste Gemeinschaftsspiele</h3>
-<div id="communityGamesList"></div>
-<p class="small">Diese Spiele erhöhen ausschließlich die Kosten der ausgewählten Spieler. Sie verändern keine Siege, Niederlagen oder Auslosungen. Du kannst mehrere Gemeinschaftsspiele hinzufügen.</p>
+<button type="button" class="primary community-add" onclick="addCommunityGame()">＋ Gemeinschaftsspiel abrechnen</button>
+<div class="community-records">
+ <div class="community-records-title"><h3>Bereits eingetragen</h3><span class="small">Kann jederzeit entfernt werden</span></div>
+ <div id="communityGamesList"></div>
+</div>
+<p class="small community-footnote">Die Kosten werden jedem ausgewählten Spieler zur Tagesabrechnung addiert. Siege, Niederlagen und Auslosungen bleiben unverändert.</p>
 </section>
 
 <section class="card">
@@ -615,7 +800,7 @@ tbody tr:nth-child(even) td {background:#fbfcff}
 </section>
 
 <section class="card">
-<h2>5. Tagesrangliste & Abrechnung</h2><p class="small">Bei „Bezahlt“ trägst du ein, was der Spieler tatsächlich gegeben hat. Alles über dem Soll wird automatisch als Mannschaftskasse gerechnet.</p>
+<h2 id="settlementPanel">5. Tagesrangliste & Abrechnung</h2><p class="small">Bei „Bezahlt“ trägst du ein, was der Spieler tatsächlich gegeben hat. Alles über dem Soll wird automatisch als Mannschaftskasse gerechnet.</p>
 <div class="data-table-wrap wide-table" tabindex="0" role="region" aria-label="Abrechnungstabelle, horizontal scrollbar"><table>
 <thead><tr><th>Rang</th><th>Spieler</th><th>Spiele</th><th>S</th><th>N</th><th>Legs</th><th>Quote</th><th>Pausen</th><th class="money">Soll</th><th class="money">Bezahlt</th><th class="money">Mannschaftskasse</th></tr></thead>
 <tbody id="billing"></tbody>
@@ -637,7 +822,7 @@ tbody tr:nth-child(even) td {background:#fbfcff}
 <p class="small">Beim Speichern wird der heutige Stand ins Archiv übernommen. Die aktive Spielerliste bleibt erhalten.</p>
 </section>
 
-<section class="card history-card no-print">
+<section class="card history-card no-print" id="archivePanel">
 <h2>7. Gespeicherte Trainingstage</h2><p class="small">Hier erscheinen deine gespeicherten Trainingstage mit Öffnen, PDF und Löschen.</p>
 <div id="history"></div>
 </section>
@@ -1304,7 +1489,26 @@ function renderRounds(){
 
 // Gemeinschaftsspiele werden nur finanziell erfasst, ohne die Dart-Rangliste zu beeinflussen.
 function communityCostPerPlayer(game){
- return (Number(game.legs)===3?3:2)*0.5;
+ // V31: count of standalone games, 0.50 EUR each.
+ // Earlier v30 entries used 2 or 3 legs; keep their original amount as 2/3 billable units.
+ return communityGameQuantity(game)*0.5;
+}
+function communityGameQuantity(game){
+ if(!game)return 0;
+ const raw=game.gameCount!=null?Number(game.gameCount):Number(game.legs);
+ return Number.isInteger(raw)&&raw>=1?Math.min(raw,999):0;
+}
+function communityInputCount(){
+ const field=document.getElementById('communityGameCount');
+ if(!field)return 1;
+ const n=Number(field.value);
+ return Number.isInteger(n)&&n>=1&&n<=99?n:0;
+}
+function adjustCommunityGameCount(delta){
+ const input=document.getElementById('communityGameCount');
+ const current=communityInputCount()||1;
+ input.value=String(Math.max(1,Math.min(99,current+delta)));
+ updateCommunityPreview();
 }
 function selectedCommunityPlayers(){
  return [...document.querySelectorAll('#communityPlayers input[type="checkbox"]:checked')].map(x=>x.value);
@@ -1314,40 +1518,74 @@ function renderCommunityPlayers(){
  if(!container)return;
  const savedSelection=new Set(selectedCommunityPlayers());
  const initial=container.dataset.initialized!=='yes';
+ const manual=container.dataset.manual==='yes';
  container.replaceChildren();
- allPlayers().filter(n=>state.present[n]!==false).forEach(n=>{
-  const label=document.createElement('label');
-  label.className='community-person';
-  const cb=document.createElement('input');
-  cb.type='checkbox';
-  cb.value=n;
-  cb.checked=initial?true:savedSelection.has(n);
-  cb.onchange=updateCommunityPreview;
-  const span=document.createElement('span');
-  span.textContent=n;
-  label.append(cb,span);
-  container.appendChild(label);
+ const buckets=[
+  {title:'Vereinsmitglieder',names:state.players||[]},
+  {title:'Gäste',names:state.guests||[]}
+ ];
+ buckets.forEach(bucket=>{
+  if(!bucket.names.length)return;
+  const group=document.createElement('div');group.className='community-player-group';
+  const heading=document.createElement('div');heading.className='community-group-title';
+  heading.textContent=bucket.title+' · '+bucket.names.length;
+  const grid=document.createElement('div');grid.className='community-player-grid';
+  bucket.names.forEach(n=>{
+   const isPresent=state.present[n]!==false;
+   const label=document.createElement('label');label.className='community-person'+(isPresent?'':' community-absent');
+   const cb=document.createElement('input');cb.type='checkbox';cb.value=n;
+   cb.checked=(initial||!manual)?isPresent:savedSelection.has(n);
+   cb.onchange=()=>{container.dataset.manual='yes';updateCommunityPreview();};
+   const name=document.createElement('span');name.className='community-name';name.textContent=n;
+   label.append(cb,name);
+   if(!isPresent){
+    const status=document.createElement('span');status.className='community-absent-tag';status.textContent='Abwesend';
+    label.appendChild(status);
+   }
+   grid.appendChild(label);
+  });
+  group.append(heading,grid);container.appendChild(group);
  });
  container.dataset.initialized='yes';
  updateCommunityPreview();
 }
 function selectPresentCommunityPlayers(){
+ const container=document.getElementById('communityPlayers');
+ if(container)container.dataset.manual='yes';
+ document.querySelectorAll('#communityPlayers input[type="checkbox"]').forEach(x=>x.checked=state.present[x.value]!==false);
+ updateCommunityPreview();
+}
+function selectAllCommunityPlayers(){
+ const container=document.getElementById('communityPlayers');
+ if(container)container.dataset.manual='yes';
  document.querySelectorAll('#communityPlayers input[type="checkbox"]').forEach(x=>x.checked=true);
  updateCommunityPreview();
 }
+function clearCommunityPlayers(){
+ const container=document.getElementById('communityPlayers');
+ if(container)container.dataset.manual='yes';
+ document.querySelectorAll('#communityPlayers input[type="checkbox"]').forEach(x=>x.checked=false);
+ updateCommunityPreview();
+}
 function updateCommunityPreview(){
- const count=selectedCommunityPlayers().length;
- const legs=Number(document.getElementById('communityLegs').value)===3?3:2;
- const cost=legs*0.5;
- const total=count*cost;
+ const players=selectedCommunityPlayers().length;
+ const games=communityInputCount();
+ const valid=games>0;
+ const unit=games*0.5;
+ const total=players*unit;
  const target=document.getElementById('communityPreview');
- if(target)target.textContent=count+' Spieler × '+euro(cost)+' = '+euro(total)+' · '+legs+' Legs';
+ const totalEl=document.getElementById('communityPreviewTotal');
+ const selectionEl=document.getElementById('communitySelectionCount');
+ if(selectionEl)selectionEl.textContent=players+' '+(players===1?'Spieler':'Spieler')+' ausgewählt';
+ if(totalEl)totalEl.textContent=euro(valid?total:0);
+ if(target)target.textContent=!valid?'Bitte 1 bis 99 Spiele eingeben':players+' Spieler × '+games+' '+(games===1?'Spiel':'Spiele')+' × 0,50 € = '+euro(total)+' · je Spieler '+euro(unit);
 }
 function addCommunityGame(){
  const names=[...new Set(selectedCommunityPlayers())];
  if(names.length<2){alert('Bitte mindestens zwei Teilnehmer auswählen.');return;}
- const legs=Number(document.getElementById('communityLegs').value)===3?3:2;
- state.communityGames.push({id:Date.now()+Math.random(),players:names,legs});
+ const gameCount=communityInputCount();
+ if(!gameCount){alert('Bitte eine ganze Spielanzahl von 1 bis 99 eingeben.');return;}
+ state.communityGames.push({id:Date.now()+Math.random(),players:names,gameCount});
  if(!persist()){
   state.communityGames.pop();
   return;
@@ -1366,21 +1604,25 @@ function renderCommunityGames(){
  container.replaceChildren();
  const list=state.communityGames||[];
  if(!list.length){
-  const p=document.createElement('p');
-  p.className='small';p.textContent='Noch kein Gemeinschaftsspiel erfasst.';
+  const p=document.createElement('div');p.className='community-empty';
+  p.textContent='Noch kein Gemeinschaftsspiel eingetragen.';
   container.appendChild(p);return;
  }
  list.forEach((g,i)=>{
+  const quantity=communityGameQuantity(g);
+  const players=[...new Set(g.players||[])];
+  const total=players.length*communityCostPerPlayer(g);
   const row=document.createElement('div');row.className='community-entry';
-  const left=document.createElement('div');
+  const index=document.createElement('span');index.className='community-entry-index';index.textContent=String(i+1).padStart(2,'0');
+  const left=document.createElement('div');left.className='community-entry-body';
   const title=document.createElement('strong');
-  title.textContent='Gemeinschaftsspiel '+(i+1)+' · '+g.legs+' Legs · '+euro((g.players||[]).length*communityCostPerPlayer(g));
+  title.textContent=quantity+' '+(quantity===1?'Spiel':'Spiele')+' · '+players.length+' Teilnehmer · '+euro(total);
   const desc=document.createElement('div');desc.className='small';
-  desc.textContent=(g.players||[]).join(', ')+' · '+euro(communityCostPerPlayer(g))+' je Spieler';
+  desc.textContent=players.join(', ')+' · je '+euro(communityCostPerPlayer(g));
   left.append(title,desc);
   const btn=document.createElement('button');btn.className='light';btn.type='button';
   btn.textContent='Entfernen';btn.onclick=()=>deleteCommunityGame(g.id);
-  row.append(left,btn);container.appendChild(row);
+  row.append(index,left,btn);container.appendChild(row);
  });
 }
 
@@ -1652,7 +1894,7 @@ function pdfLinesFromSnapshot(snap){
   lines.push('GEMEINSCHAFTSSPIELE');
   snap.communityGames.forEach((g,i)=>{
    const cost=communityCostPerPlayer(g);
-   lines.push((i+1)+'. '+g.legs+' Legs | '+(g.players||[]).length+' Teilnehmer | je '+euro(cost)+' | Gesamt '+euro((g.players||[]).length*cost));
+   lines.push((i+1)+'. '+communityGameQuantity(g)+' Spiele | '+(g.players||[]).length+' Teilnehmer | je '+euro(cost)+' | Gesamt '+euro((g.players||[]).length*cost));
    lines.push('   '+(g.players||[]).join(', '));
   });
   lines.push('');
